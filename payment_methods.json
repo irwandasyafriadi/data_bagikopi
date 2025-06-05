@@ -1,0 +1,38 @@
+[
+    {
+        "id": 1,
+        "name": "Dana",
+        "type": "e-wallet",
+        "iconUrl": "https://cdn.iconscout.com/icon/free/png-256/dana-5665299-4718080.png"
+    },
+    {
+        "id": 2,
+        "name": "OVO",
+        "type": "e-wallet",
+        "iconUrl": "https://cdn.iconscout.com/icon/free/png-256/ovo-5665300-4718081.png"
+    },
+    {
+        "id": 3,
+        "name": "GoPay",
+        "type": "e-wallet",
+        "iconUrl": "https://cdn.iconscout.com/icon/free/png-256/gopay-5665298-4718079.png"
+    },
+    {
+        "id": 4,
+        "name": "QRIS",
+        "type": "e-wallet",
+        "iconUrl": "https://cdn.iconscout.com/icon/free/png-256/qr-code-1830925-1548962.png"
+    },
+    {
+        "id": 5,
+        "name": "BCA",
+        "type": "bank",
+        "iconUrl": "https://cdn.iconscout.com/icon/free/png-256/bca-5665297-4718078.png"
+    },
+    {
+        "id": 6,
+        "name": "Mandiri",
+        "type": "bank",
+        "iconUrl": "https://cdn.iconscout.com/icon/free/png-256/mandiri-5665301-4718082.png"
+    }
+]
