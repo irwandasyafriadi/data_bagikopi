@@ -1,0 +1,41 @@
+[
+    {
+        "id": 1,
+        "name": "Espresso",
+        "category": "coffee",
+        "description": "Strong black coffee made by forcing hot water through finely-ground coffee beans.",
+        "imageUrl": "https://images.unsplash.com/photo-1576671471831-7f659d1b4f34",
+        "sizes": [
+            { "size": "small", "price": 20000 },
+            { "size": "medium", "price": 25000 },
+            { "size": "large", "price": 30000 }
+        ],
+        "isPopular": true
+    },
+    {
+        "id": 2,
+        "name": "Cappuccino",
+        "category": "coffee",
+        "description": "Espresso mixed with steamed milk and topped with froth.",
+        "imageUrl": "https://images.unsplash.com/photo-1551030173-12287a0d1a87",
+        "sizes": [
+            { "size": "small", "price": 30000 },
+            { "size": "medium", "price": 35000 },
+            { "size": "large", "price": 40000 }
+        ],
+        "isPopular": false
+    },
+    {
+        "id": 3,
+        "name": "Green Tea",
+        "category": "tea",
+        "description": "Refreshing green tea with a subtle grassy flavor.",
+        "imageUrl": "https://images.unsplash.com/photo-1576092768241-dec231879fc3",
+        "sizes": [
+            { "size": "small", "price": 15000 },
+            { "size": "medium", "price": 20000 },
+            { "size": "large", "price": 25000 }
+        ],
+        "isPopular": true
+    }
+]
