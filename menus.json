@@ -159,8 +159,6 @@
             { "size": "regular", "price": 41000 }
         ]
     },
-
-    // Croissant Series
     {
         "id": 17,
         "name": "Plain Croissant",
