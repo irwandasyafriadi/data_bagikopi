@@ -1,5 +1,4 @@
 [
-    // ================== COFFEE MENU ==================
     {
         "id": 1,
         "name": "Caramel Machiato",
@@ -50,8 +49,6 @@
             { "size": "regular", "price": 35000 }
         ]
     },
-
-    // ================== NON-COFFEE MENU ==================
     {
         "id": 6,
         "name": "Avocado Velvet",
@@ -122,9 +119,6 @@
             { "size": "regular", "price": 25000 }
         ]
     },
-
-    // ================== MEALS MENU ==================
-    // Rice Bowl Series
     {
         "id": 13,
         "name": "Chicken Nanban Rice Bowl",
