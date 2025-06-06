@@ -1,4 +1,5 @@
 [
+    // ================== COFFEE MENU ==================
     {
         "id": 1,
         "name": "Caramel Machiato",
@@ -34,13 +35,25 @@
         "name": "Aren Latte",
         "category": "coffee",
         "description": "Latte sweetened with natural palm sugar (gula aren) for a unique flavor.",
-        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/2a5e14a9-375c-4fc9-9255-4aa23e820e60_Go-Biz_20240528_095042.jpeg?auto=format",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/2a5e14a9-375c-4fc9-9255-4aa23e820e60_Go-Biz_20240528_095042.jpeg",
         "sizes": [
             { "size": "regular", "price": 25000 }
         ]
     },
     {
         "id": 5,
+        "name": "Ubee Coffee",
+        "category": "coffee",
+        "description": "Specialty coffee with a hint of honey for natural sweetness.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/a2f82c23-0fca-4d1b-a57c-c99ed2938af5_Go-Biz_20240206_174323.jpeg",
+        "sizes": [
+            { "size": "regular", "price": 35000 }
+        ]
+    },
+
+    // ================== NON-COFFEE MENU ==================
+    {
+        "id": 6,
         "name": "Avocado Velvet",
         "category": "non-coffee",
         "description": "Creamy avocado blended with milk for a refreshing drink.",
@@ -50,13 +63,148 @@
         ]
     },
     {
-        "id": 6,
-        "name": "Ubee Coffee",
-        "category": "coffee",
-        "description": "Specialty coffee with a hint of honey for natural sweetness.",
-        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/a2f82c23-0fca-4d1b-a57c-c99ed2938af5_Go-Biz_20240206_174323.jpeg",
+        "id": 7,
+        "name": "Chocolate Milk",
+        "category": "non-coffee",
+        "description": "Creamy milk with rich chocolate flavor, served cold.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/f879f034-a0b3-4ec0-a7ce-4ba67a5738bc_Go-Biz_20240206_174428.jpeg",
         "sizes": [
-            { "size": "regular", "price": 35000 }
+            { "size": "regular", "price": 25000 }
+        ]
+    },
+    {
+        "id": 8,
+        "name": "Pandan Aren",
+        "category": "non-coffee",
+        "description": "Refreshing pandan leaf infused drink with palm sugar (gula aren).",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/31276413-28b2-467a-a5c2-6540f2307138_Go-Biz_20240528_103710.jpeg",
+        "sizes": [
+            { "size": "regular", "price": 25000 }
+        ]
+    },
+    {
+        "id": 9,
+        "name": "Taro Yakult Milk",
+        "category": "non-coffee",
+        "description": "Sweet taro blended with Yakult probiotic milk for a unique taste.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/8736a982-bc8a-4f42-bb53-e268e91f67b3_Go-Biz_20240206_175114.jpeg",
+        "sizes": [
+            { "size": "regular", "price": 30000 }
+        ]
+    },
+    {
+        "id": 10,
+        "name": "Vanilla Yakult Milk",
+        "category": "non-coffee",
+        "description": "Classic Yakult drink enhanced with smooth vanilla flavor.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/8bee8b0c-718a-4900-bff4-b4390c35796f_Go-Biz_20240206_174508.jpeg",
+        "sizes": [
+            { "size": "regular", "price": 30000 }
+        ]
+    },
+    {
+        "id": 11,
+        "name": "Iced Tea",
+        "category": "non-coffee",
+        "description": "Chilled tea with a hint of lemon, perfect for refreshment.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/7d63fbd3-5699-4a11-abd6-030c99b68c0b_Go-Biz_20240528_095422.jpeg",
+        "sizes": [
+            { "size": "regular", "price": 20000 }
+        ]
+    },
+    {
+        "id": 12,
+        "name": "Strawberry Fruity",
+        "category": "non-coffee",
+        "description": "Fresh strawberry blended into a sweet and tangy fruity drink.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/9e2ee6f4-248e-4348-bf22-9c4a721a3e9f_Go-Biz_20240528_103618.jpeg",
+        "sizes": [
+            { "size": "regular", "price": 25000 }
+        ]
+    },
+
+    // ================== MEALS MENU ==================
+    // Rice Bowl Series
+    {
+        "id": 13,
+        "name": "Chicken Nanban Rice Bowl",
+        "category": "meals",
+        "description": "Chicken Karage dengan saus tartar yang khas.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/598f1a7c-661b-4f98-b785-5553c4dfe606_Go-Biz_20230429_113015.jpeg",
+        "sizes": [
+            { "size": "regular", "price": 41000 }
+        ]
+    },
+    {
+        "id": 14,
+        "name": "Karage Curry Rice Bowl",
+        "category": "meals",
+        "description": "Karage dengan saus curry yang legit dan nasi hangat.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/09197020-8d53-4a7c-b60d-e38096f720fb_Go-Biz_20230429_112925.jpeg",
+        "sizes": [
+            { "size": "regular", "price": 41000 }
+        ]
+    },
+    {
+        "id": 15,
+        "name": "Begi Karage Sambal Matah",
+        "category": "meals",
+        "description": "Ayam karage dengan sambal matah Bali yang segar.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/cc86957d-6b8a-45dd-9e10-738102922f37_Go-Biz_20230429_113108.jpeg",
+        "sizes": [
+            { "size": "regular", "price": 31000 }
+        ]
+    },
+    {
+        "id": 16,
+        "name": "Japanese Rice Bowl",
+        "category": "meals",
+        "description": "Chicken pop dengan spicy teriyaki sauce ala Jepang.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/71e61d0a-9fa0-48fe-a6fa-55a066b54fbc_Go-Biz_20230429_112901.jpeg",
+        "sizes": [
+            { "size": "regular", "price": 41000 }
+        ]
+    },
+
+    // Croissant Series
+    {
+        "id": 17,
+        "name": "Plain Croissant",
+        "category": "meals",
+        "description": "Croissant klasik dengan tekstur lapis yang renyah.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/croissant-plain.jpg",
+        "sizes": [
+            { "size": "regular", "price": 25000 }
+        ]
+    },
+    {
+        "id": 18,
+        "name": "Cheese Croissant",
+        "category": "meals",
+        "description": "Croissant dengan isian keju lembut yang lumer.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/croissant-cheese.jpg",
+        "sizes": [
+            { "size": "regular", "price": 31000 }
+        ]
+    },
+    {
+        "id": 19,
+        "name": "Classic Almond Croissant",
+        "category": "meals",
+        "description": "Croissant tabur almond dengan filling almond paste.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/croissant-almond.jpg",
+        "sizes": [
+            { "size": "regular", "price": 38000 }
+        ]
+    },
+    {
+        "id": 20,
+        "name": "Pain Au Chocolate Croissant",
+        "category": "meals",
+        "description": "Croissant dengan isian cokelat premium yang lumer.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/croissant-chocolate.jpg",
+        "sizes": [
+            { "size": "regular", "price": 31000 }
         ]
     }
 ]
