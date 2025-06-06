@@ -9,8 +9,7 @@
             { "size": "small", "price": 20000 },
             { "size": "medium", "price": 25000 },
             { "size": "large", "price": 30000 }
-        ],
-        "isPopular": true
+        ]
     },
     {
         "id": 2,
@@ -22,8 +21,7 @@
             { "size": "small", "price": 30000 },
             { "size": "medium", "price": 35000 },
             { "size": "large", "price": 40000 }
-        ],
-        "isPopular": false
+        ]
     },
     {
         "id": 3,
@@ -35,7 +33,6 @@
             { "size": "small", "price": 15000 },
             { "size": "medium", "price": 20000 },
             { "size": "large", "price": 25000 }
-        ],
-        "isPopular": true
+        ]
     }
 ]
