@@ -1,38 +1,62 @@
 [
     {
         "id": 1,
-        "name": "Espresso",
+        "name": "Caramel Machiato",
         "category": "coffee",
-        "description": "Strong black coffee made by forcing hot water through finely-ground coffee beans.",
-        "imageUrl": "https://images.unsplash.com/photo-1576671471831-7f659d1b4f34",
+        "description": "Espresso with steamed milk, vanilla syrup, and caramel drizzle.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/82246031-cbd5-4b0e-8022-19d9161d8679_Go-Biz_20240528_102510.jpeg",
         "sizes": [
-            { "size": "small", "price": 20000 },
-            { "size": "medium", "price": 25000 },
-            { "size": "large", "price": 30000 }
+            { "size": "regular", "price": 35000 }
         ]
     },
     {
         "id": 2,
-        "name": "Cappuccino",
+        "name": "Hazelnut Coffee",
         "category": "coffee",
-        "description": "Espresso mixed with steamed milk and topped with froth.",
-        "imageUrl": "https://drive.google.com/file/d/1Llna0PcD-kLrXMFnGobQFwaCwXuxQszH/view?usp=sharing",
+        "description": "Rich coffee with the sweet and nutty flavor of hazelnut.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/27c2779d-5a47-4f85-9bc8-dceefe575a84_Go-Biz_20240528_095301.jpeg",
         "sizes": [
-            { "size": "small", "price": 30000 },
-            { "size": "medium", "price": 35000 },
-            { "size": "large", "price": 40000 }
+            { "size": "regular", "price": 25000 }
         ]
     },
     {
         "id": 3,
-        "name": "Green Tea",
-        "category": "tea",
-        "description": "Refreshing green tea with a subtle grassy flavor.",
-        "imageUrl": "https://images.unsplash.com/photo-1576092768241-dec231879fc3",
+        "name": "Cocoa Latte",
+        "category": "coffee",
+        "description": "Smooth latte blended with rich cocoa for a chocolatey twist.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/9e2ee6f4-248e-4348-bf22-9c4a721a3e9f_Go-Biz_20240528_103618.jpeg",
         "sizes": [
-            { "size": "small", "price": 15000 },
-            { "size": "medium", "price": 20000 },
-            { "size": "large", "price": 25000 }
+            { "size": "regular", "price": 35000 }
+        ]
+    },
+    {
+        "id": 4,
+        "name": "Aren Latte",
+        "category": "coffee",
+        "description": "Latte sweetened with natural palm sugar (gula aren) for a unique flavor.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/2a5e14a9-375c-4fc9-9255-4aa23e820e60_Go-Biz_20240528_095042.jpeg?auto=format",
+        "sizes": [
+            { "size": "regular", "price": 25000 }
+        ]
+    },
+    {
+        "id": 5,
+        "name": "Avocado Velvet",
+        "category": "non-coffee",
+        "description": "Creamy avocado blended with milk for a refreshing drink.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/2faa1199-3e65-4530-a842-2d422f74f7f7_Go-Biz_20250228_163717.jpeg",
+        "sizes": [
+            { "size": "regular", "price": 35000 }
+        ]
+    },
+    {
+        "id": 6,
+        "name": "Ubee Coffee",
+        "category": "coffee",
+        "description": "Specialty coffee with a hint of honey for natural sweetness.",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/a2f82c23-0fca-4d1b-a57c-c99ed2938af5_Go-Biz_20240206_174323.jpeg",
+        "sizes": [
+            { "size": "regular", "price": 35000 }
         ]
     }
 ]
