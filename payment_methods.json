@@ -3,36 +3,48 @@
         "id": 1,
         "name": "Dana",
         "type": "e-wallet",
-        "iconUrl": "https://drive.google.com/file/d/1Llna0PcD-kLrXMFnGobQFwaCwXuxQszH/view?usp=sharing"
+        "iconUrl": "https://www.linkqu.id/wp-content/uploads/2021/07/filedownload.png"
     },
     {
         "id": 2,
         "name": "OVO",
         "type": "e-wallet",
-        "iconUrl": "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.logocorel.com%2F2020%2F11%2Fovo.html&psig=AOvVaw0bKbwdzotcJ0p7gqO-cxzb&ust=1749297892515000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCJi33d7r3I0DFQAAAAAdAAAAABAL"
+        "iconUrl": "https://i.pinimg.com/736x/61/c9/8a/61c98a1dffc2e04424d592564cef941f.jpg"
     },
     {
         "id": 3,
         "name": "GoPay",
         "type": "e-wallet",
-        "iconUrl": "https://cdn.iconscout.com/icon/free/png-256/gopay-5665298-4718079.png"
+        "iconUrl": "https://media.dinomarket.com/docs/imgTD/2024-12/DM_1C44C6D7CD44EA614B2E3DD86BC19795_311224171256_ll.jpg"
     },
     {
         "id": 4,
         "name": "QRIS",
         "type": "e-wallet",
-        "iconUrl": "https://cdn.iconscout.com/icon/free/png-256/qr-code-1830925-1548962.png"
+        "iconUrl": "https://bacaini.id/wp-content/uploads/2025/04/qris.jpg"
     },
     {
         "id": 5,
         "name": "BCA",
         "type": "bank",
-        "iconUrl": "https://cdn.iconscout.com/icon/free/png-256/bca-5665297-4718078.png"
+        "iconUrl": "https://brandingkan.com/wp-content/uploads/2023/02/Logo-Bank-BCA-1.png"
     },
     {
         "id": 6,
         "name": "Mandiri",
         "type": "bank",
-        "iconUrl": "https://cdn.iconscout.com/icon/free/png-256/mandiri-5665301-4718082.png"
+        "iconUrl": "https://pbs.twimg.com/profile_images/1605130431829270533/pS8KH1cE_400x400.jpg"
+    },
+    {
+        "id": 7,
+        "name": "BNI",
+        "type": "bank",
+        "iconUrl": "https://storage.googleapis.com/wpc-storage/jadibumn.id/2024/10/708487b2-logo-bni.jpg"
+    },
+    {
+        "id": 7,
+        "name": "BRI",
+        "type": "bank",
+        "iconUrl": "https://images.seeklogo.com/logo-png/47/2/bank-rakyat-indonesia-logo-png_seeklogo-474339.png"
     }
 ]
