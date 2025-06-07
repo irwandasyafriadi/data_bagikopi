@@ -1,85 +1,3 @@
-// ============== DEPENDENCIES (build.gradle - Module: app) ==============
-/*
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.navigation:navigation-fragment:2.6.0'
-    implementation 'androidx.navigation:navigation-ui:2.6.0'
-    implementation 'androidx.recyclerview:recyclerview:1.3.1'
-    implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.6.2'
-    implementation 'androidx.lifecycle:lifecycle-livedata:2.6.2'
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
-    
-    // Retrofit
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-    
-    // Glide for image loading
-    implementation 'com.github.bumptech.glide:glide:4.15.1'
-    
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-}
-*/
-
-// ============== ANDROID MANIFEST ==============
-/*
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-    <application
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.CoffeeShop"
-        tools:targetApi="31">
-
-        <activity
-            android:name=".activities.SplashActivity"
-            android:exported="true"
-            android:theme="@style/Theme.CoffeeShop.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".activities.AuthActivity"
-            android:exported="false"
-            android:theme="@style/Theme.CoffeeShop.NoActionBar" />
-
-        <activity
-            android:name=".activities.MainActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".activities.DetailMenuActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".activities.CheckoutActivity"
-            android:exported="false" />
-
-        <receiver android:name=".utils.NotificationReceiver" />
-
-    </application>
-</manifest>
-*/
-
-// ============== 1. MODELS ==============
-
 // User.java
 package com.coffeshop.app.models;
 
@@ -89,28 +7,28 @@ public class User {
     private String email;
     private String password;
     private String createdAt;
-    
+
     public User() {}
-    
+
     public User(String name, String email, String password) {
         this.name = name;
         this.email = email;
         this.password = password;
     }
-    
+
     // Getters and Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-    
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-    
+
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
-    
+
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 }
@@ -126,63 +44,116 @@ public class MenuItem {
     private String category;
     private String description;
     private String imageUrl;
-    private List<MenuSize> sizes;
-    
+    private List<Size> sizes;
+
     public MenuItem() {}
-    
+
+    // Inner class for sizes
+    public static class Size {
+        private String size;
+        private double price;
+
+        public Size() {}
+
+        public Size(String size, double price) {
+            this.size = size;
+            this.price = price;
+        }
+
+        public String getSize() { return size; }
+        public void setSize(String size) { this.size = size; }
+
+        public double getPrice() { return price; }
+        public void setPrice(double price) { this.price = price; }
+    }
+
     // Getters and Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-    
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    
+
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
-    
+
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    
+
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-    
-    public List<MenuSize> getSizes() { return sizes; }
-    public void setSizes(List<MenuSize> sizes) { this.sizes = sizes; }
-    
+
+    public List<Size> getSizes() { return sizes; }
+    public void setSizes(List<Size> sizes) { this.sizes = sizes; }
+
+    // Helper method to get minimum price
     public double getMinPrice() {
-        if (sizes != null && !sizes.isEmpty()) {
-            double minPrice = sizes.get(0).getPrice();
-            for (MenuSize size : sizes) {
-                if (size.getPrice() < minPrice) {
-                    minPrice = size.getPrice();
-                }
-            }
-            return minPrice;
-        }
-        return 0;
+        if (sizes == null || sizes.isEmpty()) return 0;
+        return sizes.stream().mapToDouble(Size::getPrice).min().orElse(0);
     }
 }
 
-// MenuSize.java
+// CartItem.java
 package com.coffeshop.app.models;
 
-public class MenuSize {
+public class CartItem {
+    private int id;
+    private int userId;
+    private int menuId;
+    private String menuName;
+    private String menuImage;
     private String size;
+    private int quantity;
     private double price;
-    
-    public MenuSize() {}
-    
-    public MenuSize(String size, double price) {
+    private double subtotal;
+
+    public CartItem() {}
+
+    public CartItem(int userId, int menuId, String menuName, String menuImage, 
+                   String size, int quantity, double price) {
+        this.userId = userId;
+        this.menuId = menuId;
+        this.menuName = menuName;
+        this.menuImage = menuImage;
         this.size = size;
+        this.quantity = quantity;
         this.price = price;
+        this.subtotal = price * quantity;
     }
-    
+
     // Getters and Setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
+
+    public int getMenuId() { return menuId; }
+    public void setMenuId(int menuId) { this.menuId = menuId; }
+
+    public String getMenuName() { return menuName; }
+    public void setMenuName(String menuName) { this.menuName = menuName; }
+
+    public String getMenuImage() { return menuImage; }
+    public void setMenuImage(String menuImage) { this.menuImage = menuImage; }
+
     public String getSize() { return size; }
     public void setSize(String size) { this.size = size; }
-    
+
+    public int getQuantity() { return quantity; }
+    public void setQuantity(int quantity) { 
+        this.quantity = quantity;
+        this.subtotal = this.price * quantity;
+    }
+
     public double getPrice() { return price; }
-    public void setPrice(double price) { this.price = price; }
+    public void setPrice(double price) { 
+        this.price = price;
+        this.subtotal = price * this.quantity;
+    }
+
+    public double getSubtotal() { return subtotal; }
+    public void setSubtotal(double subtotal) { this.subtotal = subtotal; }
 }
 
 // Order.java
@@ -199,127 +170,90 @@ public class Order {
     private double totalAmount;
     private String status;
     private String createdAt;
-    private List<OrderItem> orderItems;
-    
+    private List<OrderItem> items;
+
     public Order() {}
-    
-    // Getters and Setters
+
+    public Order(int userId, int tableNumber, String paymentMethodName, 
+                String paymentMethodType, double totalAmount) {
+        this.userId = userId;
+        this.tableNumber = tableNumber;
+        this.paymentMethodName = paymentMethodName;
+        this.paymentMethodType = paymentMethodType;
+        this.totalAmount = totalAmount;
+        this.status = "preparing";
+    }
+
+    // Inner class for order items
+    public static class OrderItem {
+        private int id;
+        private int orderId;
+        private int menuId;
+        private String menuName;
+        private String menuImage;
+        private String size;
+        private int quantity;
+        private double price;
+        private double subtotal;
+
+        public OrderItem() {}
+
+        // Getters and Setters for OrderItem
+        public int getId() { return id; }
+        public void setId(int id) { this.id = id; }
+
+        public int getOrderId() { return orderId; }
+        public void setOrderId(int orderId) { this.orderId = orderId; }
+
+        public int getMenuId() { return menuId; }
+        public void setMenuId(int menuId) { this.menuId = menuId; }
+
+        public String getMenuName() { return menuName; }
+        public void setMenuName(String menuName) { this.menuName = menuName; }
+
+        public String getMenuImage() { return menuImage; }
+        public void setMenuImage(String menuImage) { this.menuImage = menuImage; }
+
+        public String getSize() { return size; }
+        public void setSize(String size) { this.size = size; }
+
+        public int getQuantity() { return quantity; }
+        public void setQuantity(int quantity) { this.quantity = quantity; }
+
+        public double getPrice() { return price; }
+        public void setPrice(double price) { this.price = price; }
+
+        public double getSubtotal() { return subtotal; }
+        public void setSubtotal(double subtotal) { this.subtotal = subtotal; }
+    }
+
+    // Getters and Setters for Order
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-    
+
     public int getUserId() { return userId; }
     public void setUserId(int userId) { this.userId = userId; }
-    
+
     public int getTableNumber() { return tableNumber; }
     public void setTableNumber(int tableNumber) { this.tableNumber = tableNumber; }
-    
+
     public String getPaymentMethodName() { return paymentMethodName; }
     public void setPaymentMethodName(String paymentMethodName) { this.paymentMethodName = paymentMethodName; }
-    
+
     public String getPaymentMethodType() { return paymentMethodType; }
     public void setPaymentMethodType(String paymentMethodType) { this.paymentMethodType = paymentMethodType; }
-    
+
     public double getTotalAmount() { return totalAmount; }
     public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
-    
+
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-    
+
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
-    
-    public List<OrderItem> getOrderItems() { return orderItems; }
-    public void setOrderItems(List<OrderItem> orderItems) { this.orderItems = orderItems; }
-}
 
-// OrderItem.java
-package com.coffeshop.app.models;
-
-public class OrderItem {
-    private int id;
-    private int orderId;
-    private int menuId;
-    private String menuName;
-    private String menuImage;
-    private String size;
-    private int quantity;
-    private double price;
-    private double subtotal;
-    
-    public OrderItem() {}
-    
-    // Getters and Setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
-    
-    public int getOrderId() { return orderId; }
-    public void setOrderId(int orderId) { this.orderId = orderId; }
-    
-    public int getMenuId() { return menuId; }
-    public void setMenuId(int menuId) { this.menuId = menuId; }
-    
-    public String getMenuName() { return menuName; }
-    public void setMenuName(String menuName) { this.menuName = menuName; }
-    
-    public String getMenuImage() { return menuImage; }
-    public void setMenuImage(String menuImage) { this.menuImage = menuImage; }
-    
-    public String getSize() { return size; }
-    public void setSize(String size) { this.size = size; }
-    
-    public int getQuantity() { return quantity; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
-    
-    public double getPrice() { return price; }
-    public void setPrice(double price) { this.price = price; }
-    
-    public double getSubtotal() { return subtotal; }
-    public void setSubtotal(double subtotal) { this.subtotal = subtotal; }
-}
-
-// CartItem.java
-package com.coffeshop.app.models;
-
-public class CartItem {
-    private int id;
-    private int userId;
-    private int menuId;
-    private String menuName;
-    private String menuImage;
-    private String size;
-    private int quantity;
-    private double price;
-    private double subtotal;
-    
-    public CartItem() {}
-    
-    // Getters and Setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
-    
-    public int getUserId() { return userId; }
-    public void setUserId(int userId) { this.userId = userId; }
-    
-    public int getMenuId() { return menuId; }
-    public void setMenuId(int menuId) { this.menuId = menuId; }
-    
-    public String getMenuName() { return menuName; }
-    public void setMenuName(String menuName) { this.menuName = menuName; }
-    
-    public String getMenuImage() { return menuImage; }
-    public void setMenuImage(String menuImage) { this.menuImage = menuImage; }
-    
-    public String getSize() { return size; }
-    public void setSize(String size) { this.size = size; }
-    
-    public int getQuantity() { return quantity; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
-    
-    public double getPrice() { return price; }
-    public void setPrice(double price) { this.price = price; }
-    
-    public double getSubtotal() { return subtotal; }
-    public void setSubtotal(double subtotal) { this.subtotal = subtotal; }
+    public List<OrderItem> getItems() { return items; }
+    public void setItems(List<OrderItem> items) { this.items = items; }
 }
 
 // PaymentMethod.java
@@ -330,191 +264,370 @@ public class PaymentMethod {
     private String name;
     private String type;
     private String iconUrl;
-    
+
     public PaymentMethod() {}
-    
+
+    public PaymentMethod(String name, String type, String iconUrl) {
+        this.name = name;
+        this.type = type;
+        this.iconUrl = iconUrl;
+    }
+
     // Getters and Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-    
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    
+
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
-    
+
     public String getIconUrl() { return iconUrl; }
     public void setIconUrl(String iconUrl) { this.iconUrl = iconUrl; }
 }
 
-// ============== 2. DATABASE ==============
-
 // DatabaseContract.java
 package com.coffeshop.app.database;
 
-public final class DatabaseContract {
-    private DatabaseContract() {}
-    
-    public static final String DATABASE_NAME = "coffeeShop.db";
+public class DatabaseContract {
+    public static final String DATABASE_NAME = "coffee_shop.db";
     public static final int DATABASE_VERSION = 1;
-    
-    public static final class UserEntry {
-        public static final String TABLE_NAME = "users";
-        public static final String COLUMN_ID = "id";
-        public static final String COLUMN_NAME = "name";
-        public static final String COLUMN_EMAIL = "email";
-        public static final String COLUMN_PASSWORD = "password";
-        public static final String COLUMN_CREATED_AT = "created_at";
-        
-        public static final String CREATE_TABLE = 
-            "CREATE TABLE " + TABLE_NAME + " (" +
-            COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            COLUMN_NAME + " TEXT NOT NULL, " +
-            COLUMN_EMAIL + " TEXT UNIQUE NOT NULL, " +
-            COLUMN_PASSWORD + " TEXT NOT NULL, " +
-            COLUMN_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP)";
-    }
-    
-    public static final class OrderEntry {
-        public static final String TABLE_NAME = "orders";
-        public static final String COLUMN_ID = "id";
-        public static final String COLUMN_USER_ID = "user_id";
-        public static final String COLUMN_TABLE_NUMBER = "table_number";
-        public static final String COLUMN_PAYMENT_METHOD_NAME = "payment_method_name";
-        public static final String COLUMN_PAYMENT_METHOD_TYPE = "payment_method_type";
-        public static final String COLUMN_TOTAL_AMOUNT = "total_amount";
-        public static final String COLUMN_STATUS = "status";
-        public static final String COLUMN_CREATED_AT = "created_at";
-        
-        public static final String CREATE_TABLE = 
-            "CREATE TABLE " + TABLE_NAME + " (" +
-            COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            COLUMN_USER_ID + " INTEGER NOT NULL, " +
-            COLUMN_TABLE_NUMBER + " INTEGER NOT NULL, " +
-            COLUMN_PAYMENT_METHOD_NAME + " TEXT NOT NULL, " +
-            COLUMN_PAYMENT_METHOD_TYPE + " TEXT NOT NULL, " +
-            COLUMN_TOTAL_AMOUNT + " REAL NOT NULL, " +
-            COLUMN_STATUS + " TEXT DEFAULT 'preparing', " +
-            COLUMN_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP)";
-    }
-    
-    public static final class OrderItemEntry {
-        public static final String TABLE_NAME = "order_items";
-        public static final String COLUMN_ID = "id";
-        public static final String COLUMN_ORDER_ID = "order_id";
-        public static final String COLUMN_MENU_ID = "menu_id";
-        public static final String COLUMN_MENU_NAME = "menu_name";
-        public static final String COLUMN_MENU_IMAGE = "menu_image";
-        public static final String COLUMN_SIZE = "size";
-        public static final String COLUMN_QUANTITY = "quantity";
-        public static final String COLUMN_PRICE = "price";
-        public static final String COLUMN_SUBTOTAL = "subtotal";
-        
-        public static final String CREATE_TABLE = 
-            "CREATE TABLE " + TABLE_NAME + " (" +
-            COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            COLUMN_ORDER_ID + " INTEGER NOT NULL, " +
-            COLUMN_MENU_ID + " INTEGER NOT NULL, " +
-            COLUMN_MENU_NAME + " TEXT NOT NULL, " +
-            COLUMN_MENU_IMAGE + " TEXT NOT NULL, " +
-            COLUMN_SIZE + " TEXT NOT NULL, " +
-            COLUMN_QUANTITY + " INTEGER NOT NULL, " +
-            COLUMN_PRICE + " REAL NOT NULL, " +
-            COLUMN_SUBTOTAL + " REAL NOT NULL)";
-    }
-    
-    public static final class CartEntry {
-        public static final String TABLE_NAME = "cart";
-        public static final String COLUMN_ID = "id";
-        public static final String COLUMN_USER_ID = "user_id";
-        public static final String COLUMN_MENU_ID = "menu_id";
-        public static final String COLUMN_MENU_NAME = "menu_name";
-        public static final String COLUMN_MENU_IMAGE = "menu_image";
-        public static final String COLUMN_SIZE = "size";
-        public static final String COLUMN_QUANTITY = "quantity";
-        public static final String COLUMN_PRICE = "price";
-        public static final String COLUMN_SUBTOTAL = "subtotal";
-        
-        public static final String CREATE_TABLE = 
-            "CREATE TABLE " + TABLE_NAME + " (" +
-            COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            COLUMN_USER_ID + " INTEGER NOT NULL, " +
-            COLUMN_MENU_ID + " INTEGER NOT NULL, " +
-            COLUMN_MENU_NAME + " TEXT NOT NULL, " +
-            COLUMN_MENU_IMAGE + " TEXT NOT NULL, " +
-            COLUMN_SIZE + " TEXT NOT NULL, " +
-            COLUMN_QUANTITY + " INTEGER NOT NULL, " +
-            COLUMN_PRICE + " REAL NOT NULL, " +
-            COLUMN_SUBTOTAL + " REAL NOT NULL)";
-    }
+
+    // Users table
+    public static final String TABLE_USERS = "users";
+    public static final String COLUMN_USER_ID = "id";
+    public static final String COLUMN_USER_NAME = "name";
+    public static final String COLUMN_USER_EMAIL = "email";
+    public static final String COLUMN_USER_PASSWORD = "password";
+    public static final String COLUMN_USER_CREATED_AT = "created_at";
+
+    // Orders table
+    public static final String TABLE_ORDERS = "orders";
+    public static final String COLUMN_ORDER_ID = "id";
+    public static final String COLUMN_ORDER_USER_ID = "user_id";
+    public static final String COLUMN_ORDER_TABLE_NUMBER = "table_number";
+    public static final String COLUMN_ORDER_PAYMENT_METHOD_NAME = "payment_method_name";
+    public static final String COLUMN_ORDER_PAYMENT_METHOD_TYPE = "payment_method_type";
+    public static final String COLUMN_ORDER_TOTAL_AMOUNT = "total_amount";
+    public static final String COLUMN_ORDER_STATUS = "status";
+    public static final String COLUMN_ORDER_CREATED_AT = "created_at";
+
+    // Order items table
+    public static final String TABLE_ORDER_ITEMS = "order_items";
+    public static final String COLUMN_ORDER_ITEM_ID = "id";
+    public static final String COLUMN_ORDER_ITEM_ORDER_ID = "order_id";
+    public static final String COLUMN_ORDER_ITEM_MENU_ID = "menu_id";
+    public static final String COLUMN_ORDER_ITEM_MENU_NAME = "menu_name";
+    public static final String COLUMN_ORDER_ITEM_MENU_IMAGE = "menu_image";
+    public static final String COLUMN_ORDER_ITEM_SIZE = "size";
+    public static final String COLUMN_ORDER_ITEM_QUANTITY = "quantity";
+    public static final String COLUMN_ORDER_ITEM_PRICE = "price";
+    public static final String COLUMN_ORDER_ITEM_SUBTOTAL = "subtotal";
+
+    // Cart table
+    public static final String TABLE_CART = "cart";
+    public static final String COLUMN_CART_ID = "id";
+    public static final String COLUMN_CART_USER_ID = "user_id";
+    public static final String COLUMN_CART_MENU_ID = "menu_id";
+    public static final String COLUMN_CART_MENU_NAME = "menu_name";
+    public static final String COLUMN_CART_MENU_IMAGE = "menu_image";
+    public static final String COLUMN_CART_SIZE = "size";
+    public static final String COLUMN_CART_QUANTITY = "quantity";
+    public static final String COLUMN_CART_PRICE = "price";
+    public static final String COLUMN_CART_SUBTOTAL = "subtotal";
+
+    // SQL Create statements
+    public static final String CREATE_TABLE_USERS = 
+        "CREATE TABLE " + TABLE_USERS + " (" +
+        COLUMN_USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        COLUMN_USER_NAME + " TEXT NOT NULL, " +
+        COLUMN_USER_EMAIL + " TEXT UNIQUE NOT NULL, " +
+        COLUMN_USER_PASSWORD + " TEXT NOT NULL, " +
+        COLUMN_USER_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP)";
+
+    public static final String CREATE_TABLE_ORDERS = 
+        "CREATE TABLE " + TABLE_ORDERS + " (" +
+        COLUMN_ORDER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        COLUMN_ORDER_USER_ID + " INTEGER NOT NULL, " +
+        COLUMN_ORDER_TABLE_NUMBER + " INTEGER NOT NULL, " +
+        COLUMN_ORDER_PAYMENT_METHOD_NAME + " TEXT NOT NULL, " +
+        COLUMN_ORDER_PAYMENT_METHOD_TYPE + " TEXT NOT NULL, " +
+        COLUMN_ORDER_TOTAL_AMOUNT + " REAL NOT NULL, " +
+        COLUMN_ORDER_STATUS + " TEXT DEFAULT 'preparing', " +
+        COLUMN_ORDER_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP)";
+
+    public static final String CREATE_TABLE_ORDER_ITEMS = 
+        "CREATE TABLE " + TABLE_ORDER_ITEMS + " (" +
+        COLUMN_ORDER_ITEM_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        COLUMN_ORDER_ITEM_ORDER_ID + " INTEGER NOT NULL, " +
+        COLUMN_ORDER_ITEM_MENU_ID + " INTEGER NOT NULL, " +
+        COLUMN_ORDER_ITEM_MENU_NAME + " TEXT NOT NULL, " +
+        COLUMN_ORDER_ITEM_MENU_IMAGE + " TEXT NOT NULL, " +
+        COLUMN_ORDER_ITEM_SIZE + " TEXT NOT NULL, " +
+        COLUMN_ORDER_ITEM_QUANTITY + " INTEGER NOT NULL, " +
+        COLUMN_ORDER_ITEM_PRICE + " REAL NOT NULL, " +
+        COLUMN_ORDER_ITEM_SUBTOTAL + " REAL NOT NULL)";
+
+    public static final String CREATE_TABLE_CART = 
+        "CREATE TABLE " + TABLE_CART + " (" +
+        COLUMN_CART_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        COLUMN_CART_USER_ID + " INTEGER NOT NULL, " +
+        COLUMN_CART_MENU_ID + " INTEGER NOT NULL, " +
+        COLUMN_CART_MENU_NAME + " TEXT NOT NULL, " +
+        COLUMN_CART_MENU_IMAGE + " TEXT NOT NULL, " +
+        COLUMN_CART_SIZE + " TEXT NOT NULL, " +
+        COLUMN_CART_QUANTITY + " INTEGER NOT NULL, " +
+        COLUMN_CART_PRICE + " REAL NOT NULL, " +
+        COLUMN_CART_SUBTOTAL + " REAL NOT NULL)";
 }
 
 // DatabaseHelper.java
 package com.coffeshop.app.database;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import java.util.ArrayList;
+import java.util.List;
+import com.coffeshop.app.models.*;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
-    
+
     public DatabaseHelper(Context context) {
         super(context, DatabaseContract.DATABASE_NAME, null, DatabaseContract.DATABASE_VERSION);
     }
-    
+
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(DatabaseContract.UserEntry.CREATE_TABLE);
-        db.execSQL(DatabaseContract.OrderEntry.CREATE_TABLE);
-        db.execSQL(DatabaseContract.OrderItemEntry.CREATE_TABLE);
-        db.execSQL(DatabaseContract.CartEntry.CREATE_TABLE);
+        db.execSQL(DatabaseContract.CREATE_TABLE_USERS);
+        db.execSQL(DatabaseContract.CREATE_TABLE_ORDERS);
+        db.execSQL(DatabaseContract.CREATE_TABLE_ORDER_ITEMS);
+        db.execSQL(DatabaseContract.CREATE_TABLE_CART);
     }
-    
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + DatabaseContract.UserEntry.TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS " + DatabaseContract.OrderEntry.TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS " + DatabaseContract.OrderItemEntry.TABLE_NAME);
-        db.execSQL("DROP TABLE IF EXISTS " + DatabaseContract.CartEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + DatabaseContract.TABLE_USERS);
+        db.execSQL("DROP TABLE IF EXISTS " + DatabaseContract.TABLE_ORDERS);
+        db.execSQL("DROP TABLE IF EXISTS " + DatabaseContract.TABLE_ORDER_ITEMS);
+        db.execSQL("DROP TABLE IF EXISTS " + DatabaseContract.TABLE_CART);
         onCreate(db);
+    }
+
+    // User methods
+    public long insertUser(User user) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(DatabaseContract.COLUMN_USER_NAME, user.getName());
+        values.put(DatabaseContract.COLUMN_USER_EMAIL, user.getEmail());
+        values.put(DatabaseContract.COLUMN_USER_PASSWORD, user.getPassword());
+        return db.insert(DatabaseContract.TABLE_USERS, null, values);
+    }
+
+    public User getUserByEmail(String email) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(DatabaseContract.TABLE_USERS,
+                null, DatabaseContract.COLUMN_USER_EMAIL + "=?",
+                new String[]{email}, null, null, null);
+        
+        if (cursor != null && cursor.moveToFirst()) {
+            User user = new User();
+            user.setId(cursor.getInt(cursor.getColumnIndex(DatabaseContract.COLUMN_USER_ID)));
+            user.setName(cursor.getString(cursor.getColumnIndex(DatabaseContract.COLUMN_USER_NAME)));
+            user.setEmail(cursor.getString(cursor.getColumnIndex(DatabaseContract.COLUMN_USER_EMAIL)));
+            user.setPassword(cursor.getString(cursor.getColumnIndex(DatabaseContract.COLUMN_USER_PASSWORD)));
+            cursor.close();
+            return user;
+        }
+        return null;
+    }
+
+    // Cart methods
+    public long insertCartItem(CartItem cartItem) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(DatabaseContract.COLUMN_CART_USER_ID, cartItem.getUserId());
+        values.put(DatabaseContract.COLUMN_CART_MENU_ID, cartItem.getMenuId());
+        values.put(DatabaseContract.COLUMN_CART_MENU_NAME, cartItem.getMenuName());
+        values.put(DatabaseContract.COLUMN_CART_MENU_IMAGE, cartItem.getMenuImage());
+        values.put(DatabaseContract.COLUMN_CART_SIZE, cartItem.getSize());
+        values.put(DatabaseContract.COLUMN_CART_QUANTITY, cartItem.getQuantity());
+        values.put(DatabaseContract.COLUMN_CART_PRICE, cartItem.getPrice());
+        values.put(DatabaseContract.COLUMN_CART_SUBTOTAL, cartItem.getSubtotal());
+        return db.insert(DatabaseContract.TABLE_CART, null, values);
+    }
+
+    public List<CartItem> getCartItems(int userId) {
+        List<CartItem> cartItems = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(DatabaseContract.TABLE_CART,
+                null, DatabaseContract.COLUMN_CART_USER_ID + "=?",
+                new String[]{String.valueOf(userId)}, null, null, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                CartItem item = new CartItem();
+                item.setId(cursor.getInt(cursor.getColumnIndex(DatabaseContract.COLUMN_CART_ID)));
+                item.setUserId(cursor.getInt(cursor.getColumnIndex(DatabaseContract.COLUMN_CART_USER_ID)));
+                item.setMenuId(cursor.getInt(cursor.getColumnIndex(DatabaseContract.COLUMN_CART_MENU_ID)));
+                item.setMenuName(cursor.getString(cursor.getColumnIndex(DatabaseContract.COLUMN_CART_MENU_NAME)));
+                item.setMenuImage(cursor.getString(cursor.getColumnIndex(DatabaseContract.COLUMN_CART_MENU_IMAGE)));
+                item.setSize(cursor.getString(cursor.getColumnIndex(DatabaseContract.COLUMN_CART_SIZE)));
+                item.setQuantity(cursor.getInt(cursor.getColumnIndex(DatabaseContract.COLUMN_CART_QUANTITY)));
+                item.setPrice(cursor.getDouble(cursor.getColumnIndex(DatabaseContract.COLUMN_CART_PRICE)));
+                item.setSubtotal(cursor.getDouble(cursor.getColumnIndex(DatabaseContract.COLUMN_CART_SUBTOTAL)));
+                cartItems.add(item);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return cartItems;
+    }
+
+    public void updateCartItem(CartItem cartItem) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(DatabaseContract.COLUMN_CART_QUANTITY, cartItem.getQuantity());
+        values.put(DatabaseContract.COLUMN_CART_SUBTOTAL, cartItem.getSubtotal());
+        db.update(DatabaseContract.TABLE_CART, values, 
+                DatabaseContract.COLUMN_CART_ID + "=?",
+                new String[]{String.valueOf(cartItem.getId())});
+    }
+
+    public void deleteCartItem(int cartId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(DatabaseContract.TABLE_CART, 
+                DatabaseContract.COLUMN_CART_ID + "=?",
+                new String[]{String.valueOf(cartId)});
+    }
+
+    public void clearCart(int userId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(DatabaseContract.TABLE_CART, 
+                DatabaseContract.COLUMN_CART_USER_ID + "=?",
+                new String[]{String.valueOf(userId)});
+    }
+
+    // Order methods
+    public long insertOrder(Order order) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(DatabaseContract.COLUMN_ORDER_USER_ID, order.getUserId());
+        values.put(DatabaseContract.COLUMN_ORDER_TABLE_NUMBER, order.getTableNumber());
+        values.put(DatabaseContract.COLUMN_ORDER_PAYMENT_METHOD_NAME, order.getPaymentMethodName());
+        values.put(DatabaseContract.COLUMN_ORDER_PAYMENT_METHOD_TYPE, order.getPaymentMethodType());
+        values.put(DatabaseContract.COLUMN_ORDER_TOTAL_AMOUNT, order.getTotalAmount());
+        values.put(DatabaseContract.COLUMN_ORDER_STATUS, order.getStatus());
+        return db.insert(DatabaseContract.TABLE_ORDERS, null, values);
+    }
+
+    public List<Order> getUserOrders(int userId) {
+        List<Order> orders = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(DatabaseContract.TABLE_ORDERS,
+                null, DatabaseContract.COLUMN_ORDER_USER_ID + "=?",
+                new String[]{String.valueOf(userId)}, null, null, 
+                DatabaseContract.COLUMN_ORDER_CREATED_AT + " DESC");
+
+        if (cursor.moveToFirst()) {
+            do {
+                Order order = new Order();
+                order.setId(cursor.getInt(cursor.getColumnIndex(DatabaseContract.COLUMN_ORDER_ID)));
+                order.setUserId(cursor.getInt(cursor.getColumnIndex(DatabaseContract.COLUMN_ORDER_USER_ID)));
+                order.setTableNumber(cursor.getInt(cursor.getColumnIndex(DatabaseContract.COLUMN_ORDER_TABLE_NUMBER)));
+                order.setPaymentMethodName(cursor.getString(cursor.getColumnIndex(DatabaseContract.COLUMN_ORDER_PAYMENT_METHOD_NAME)));
+                order.setPaymentMethodType(cursor.getString(cursor.getColumnIndex(DatabaseContract.COLUMN_ORDER_PAYMENT_METHOD_TYPE)));
+                order.setTotalAmount(cursor.getDouble(cursor.getColumnIndex(DatabaseContract.COLUMN_ORDER_TOTAL_AMOUNT)));
+                order.setStatus(cursor.getString(cursor.getColumnIndex(DatabaseContract.COLUMN_ORDER_STATUS)));
+                order.setCreatedAt(cursor.getString(cursor.getColumnIndex(DatabaseContract.COLUMN_ORDER_CREATED_AT)));
+                orders.add(order);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return orders;
+    }
+
+    public void updateOrderStatus(int orderId, String status) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(DatabaseContract.COLUMN_ORDER_STATUS, status);
+        db.update(DatabaseContract.TABLE_ORDERS, values,
+                DatabaseContract.COLUMN_ORDER_ID + "=?",
+                new String[]{String.valueOf(orderId)});
     }
 }
 
-// ============== 3. NETWORK ==============
+// Constants.java
+package com.coffeshop.app.utils;
 
-// ApiClient.java
-package com.coffeshop.app.network;
-
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-
-public class ApiClient {
-    private static final String BASE_URL = "https://raw.githubusercontent.com/";
-    private static Retrofit retrofit = null;
+public class Constants {
+    public static final String BASE_URL = "https://api.example.com/";
+    public static final String PREF_NAME = "CoffeeShopPrefs";
+    public static final String KEY_USER_ID = "user_id";
+    public static final String KEY_USER_NAME = "user_name";
+    public static final String KEY_USER_EMAIL = "user_email";
+    public static final String KEY_IS_LOGGED_IN = "is_logged_in";
     
-    public static Retrofit getClient() {
-        if (retrofit == null) {
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
+    public static final String NOTIFICATION_CHANNEL_ID = "coffee_shop_channel";
+    public static final String NOTIFICATION_CHANNEL_NAME = "Coffee Shop Notifications";
+    
+    public static final int NOTIFICATION_ORDER_CREATED = 1;
+    public static final int NOTIFICATION_ORDER_COMPLETED = 2;
+    
+    public static final String ORDER_STATUS_PREPARING = "preparing";
+    public static final String ORDER_STATUS_COMPLETE = "complete";
+}
+
+// ValidationUtils.java
+package com.coffeshop.app.utils;
+
+import android.util.Patterns;
+
+public class ValidationUtils {
+    
+    public static boolean isValidEmail(String email) {
+        return email != null && Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+    
+    public static boolean isValidPassword(String password) {
+        return password != null && password.length() >= 6;
+    }
+    
+    public static boolean isValidName(String name) {
+        return name != null && name.trim().length() >= 2;
+    }
+    
+    public static boolean isValidTableNumber(String tableNumber) {
+        try {
+            int table = Integer.parseInt(tableNumber);
+            return table > 0 && table <= 100;
+        } catch (NumberFormatException e) {
+            return false;
         }
-        return retrofit;
     }
 }
 
 // ApiService.java
 package com.coffeshop.app.network;
 
+import retrofit2.Call;
+import retrofit2.http.GET;
 import com.coffeshop.app.models.MenuItem;
 import com.coffeshop.app.models.PaymentMethod;
 import java.util.List;
-import retrofit2.Call;
-import retrofit2.http.GET;
 
 public interface ApiService {
     
-    public static class MenuResponse {
+    @GET("menus")
+    Call<MenuResponse> getMenus();
+    
+    @GET("payment-methods")
+    Call<PaymentResponse> getPaymentMethods();
+    
+    // Response classes
+    class MenuResponse {
         private List<MenuItem> menus;
         private List<String> categories;
         
@@ -525,505 +638,311 @@ public interface ApiService {
         public void setCategories(List<String> categories) { this.categories = categories; }
     }
     
-    public static class PaymentResponse {
+    class PaymentResponse {
         private List<PaymentMethod> payment_methods;
         
         public List<PaymentMethod> getPaymentMethods() { return payment_methods; }
-        public void setPaymentMethods(List<PaymentMethod> payment_methods) { this.payment_methods = payment_methods; }
-    }
-    
-    @GET("username/repository/main/menu.json")
-    Call<MenuResponse> getMenus();
-    
-    @GET("username/repository/main/payment.json")
-    Call<PaymentResponse> getPaymentMethods();
-}
-
-// ============== 4. UTILS ==============
-
-// Constants.java
-package com.coffeshop.app.utils;
-
-public class Constants {
-    public static final String PREF_NAME = "CoffeeShopPrefs";
-    public static final String KEY_USER_ID = "user_id";
-    public static final String KEY_USER_NAME = "user_name";
-    public static final String KEY_USER_EMAIL = "user_email";
-    public static final String KEY_IS_LOGGED_IN = "is_logged_in";
-    
-    public static final String ORDER_STATUS_PREPARING = "preparing";
-    public static final String ORDER_STATUS_COMPLETE = "complete";
-    
-    public static final String EXTRA_MENU_ITEM = "menu_item";
-    public static final String EXTRA_CART_ITEM = "cart_item";
-    public static final String EXTRA_IS_EDIT_MODE = "is_edit_mode";
-    
-    public static final String ACTION_ORDER_CREATED = "com.coffeshop.app.ORDER_CREATED";
-    public static final String ACTION_ORDER_COMPLETED = "com.coffeshop.app.ORDER_COMPLETED";
-}
-
-// ValidationUtils.java
-package com.coffeshop.app.utils;
-
-import java.util.regex.Pattern;
-
-public class ValidationUtils {
-    
-    private static final String EMAIL_PATTERN = 
-            "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-    
-    private static final Pattern pattern = Pattern.compile(EMAIL_PATTERN);
-    
-    public static boolean isValidEmail(String email) {
-        return email != null && pattern.matcher(email).matches();
-    }
-    
-    public static boolean isValidPassword(String password) {
-        return password != null && password.length() >= 6;
-    }
-    
-    public static boolean isValidName(String name) {
-        return name != null && !name.trim().isEmpty();
-    }
-    
-    public static boolean isValidTableNumber(String tableNumber) {
-        try {
-            int number = Integer.parseInt(tableNumber);
-            return number > 0;
-        } catch (NumberFormatException e) {
-            return false;
+        public void setPaymentMethods(List<PaymentMethod> payment_methods) { 
+            this.payment_methods = payment_methods; 
         }
     }
+}
+
+// ApiClient.java
+package com.coffeshop.app.network;
+
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import com.coffeshop.app.utils.Constants;
+
+public class ApiClient {
+    private static Retrofit retrofit = null;
     
-    public static String formatPrice(double price) {
-        return String.format("Rp %.0f", price);
+    public static Retrofit getClient() {
+        if (retrofit == null) {
+            retrofit = new Retrofit.Builder()
+                    .baseUrl(Constants.BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+        return retrofit;
     }
     
-    public static String formatDate(String dateTime) {
-        // Simple date formatting - can be improved with SimpleDateFormat
-        if (dateTime != null && dateTime.contains(" ")) {
-            return dateTime.split(" ")[0];
-        }
-        return dateTime;
+    public static ApiService getApiService() {
+        return getClient().create(ApiService.class);
     }
 }
 
 // AppRepository.java
 package com.coffeshop.app.utils;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
-
-import com.coffeshop.app.database.DatabaseContract;
+import android.content.SharedPreferences;
+import androidx.lifecycle.MutableLiveData;
 import com.coffeshop.app.database.DatabaseHelper;
-import com.coffeshop.app.models.CartItem;
-import com.coffeshop.app.models.MenuItem;
-import com.coffeshop.app.models.Order;
-import com.coffeshop.app.models.OrderItem;
-import com.coffeshop.app.models.PaymentMethod;
-import com.coffeshop.app.models.User;
+import com.coffeshop.app.models.*;
 import com.coffeshop.app.network.ApiClient;
 import com.coffeshop.app.network.ApiService;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import java.util.List;
+import java.util.ArrayList;
 
 public class AppRepository {
-    private static final String TAG = "AppRepository";
-    private DatabaseHelper dbHelper;
+    private static AppRepository instance;
+    private DatabaseHelper databaseHelper;
+    private SharedPreferences sharedPreferences;
     private ApiService apiService;
     
-    public AppRepository(Context context) {
-        dbHelper = new DatabaseHelper(context);
-        apiService = ApiClient.getClient().create(ApiService.class);
+    // LiveData for observing data changes
+    private MutableLiveData<List<MenuItem>> menusLiveData = new MutableLiveData<>();
+    private MutableLiveData<List<String>> categoriesLiveData = new MutableLiveData<>();
+    private MutableLiveData<List<CartItem>> cartLiveData = new MutableLiveData<>();
+    private MutableLiveData<List<Order>> ordersLiveData = new MutableLiveData<>();
+    private MutableLiveData<List<PaymentMethod>> paymentMethodsLiveData = new MutableLiveData<>();
+    
+    private AppRepository(Context context) {
+        databaseHelper = new DatabaseHelper(context);
+        sharedPreferences = context.getSharedPreferences(Constants.PREF_NAME, Context.MODE_PRIVATE);
+        apiService = ApiClient.getApiService();
     }
     
-    // ============== USER METHODS ==============
-    
-    public interface UserCallback {
-        void onSuccess(User user);
-        void onError(String error);
-    }
-    
-    public interface LoginCallback {
-        void onSuccess(User user);
-        void onError(String error);
-    }
-    
-    public void registerUser(String name, String email, String password, UserCallback callback) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        
-        // Check if email already exists
-        Cursor cursor = db.query(DatabaseContract.UserEntry.TABLE_NAME,
-                null,
-                DatabaseContract.UserEntry.COLUMN_EMAIL + "=?",
-                new String[]{email},
-                null, null, null);
-        
-        if (cursor.getCount() > 0) {
-            cursor.close();
-            callback.onError("Email sudah terdaftar");
-            return;
+    public static synchronized AppRepository getInstance(Context context) {
+        if (instance == null) {
+            instance = new AppRepository(context.getApplicationContext());
         }
-        cursor.close();
-        
-        // Insert new user
-        ContentValues values = new ContentValues();
-        values.put(DatabaseContract.UserEntry.COLUMN_NAME, name);
-        values.put(DatabaseContract.UserEntry.COLUMN_EMAIL, email);
-        values.put(DatabaseContract.UserEntry.COLUMN_PASSWORD, password);
-        
-        long result = db.insert(DatabaseContract.UserEntry.TABLE_NAME, null, values);
-        
-        if (result != -1) {
-            User user = new User(name, email, password);
-            user.setId((int) result);
-            callback.onSuccess(user);
-        } else {
-            callback.onError("Gagal mendaftar");
+        return instance;
+    }
+    
+    // User Authentication
+    public boolean registerUser(User user) {
+        long result = databaseHelper.insertUser(user);
+        return result != -1;
+    }
+    
+    public User loginUser(String email, String password) {
+        User user = databaseHelper.getUserByEmail(email);
+        if (user != null && user.getPassword().equals(password)) {
+            saveUserSession(user);
+            return user;
         }
+        return null;
     }
     
-    public void loginUser(String email, String password, LoginCallback callback) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        
-        Cursor cursor = db.query(DatabaseContract.UserEntry.TABLE_NAME,
-                null,
-                DatabaseContract.UserEntry.COLUMN_EMAIL + "=? AND " + 
-                DatabaseContract.UserEntry.COLUMN_PASSWORD + "=?",
-                new String[]{email, password},
-                null, null, null);
-        
-        if (cursor.moveToFirst()) {
-            User user = new User();
-            user.setId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.UserEntry.COLUMN_ID)));
-            user.setName(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.UserEntry.COLUMN_NAME)));
-            user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.UserEntry.COLUMN_EMAIL)));
-            user.setPassword(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.UserEntry.COLUMN_PASSWORD)));
-            user.setCreatedAt(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.UserEntry.COLUMN_CREATED_AT)));
-            
-            cursor.close();
-            callback.onSuccess(user);
-        } else {
-            cursor.close();
-            callback.onError("Email atau password salah");
-        }
+    public void saveUserSession(User user) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(Constants.KEY_USER_ID, user.getId());
+        editor.putString(Constants.KEY_USER_NAME, user.getName());
+        editor.putString(Constants.KEY_USER_EMAIL, user.getEmail());
+        editor.putBoolean(Constants.KEY_IS_LOGGED_IN, true);
+        editor.apply();
     }
     
-    // ============== MENU METHODS ==============
-    
-    public interface MenuCallback {
-        void onSuccess(List<MenuItem> menus, List<String> categories);
-        void onError(String error);
+    public void logout() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.clear();
+        editor.apply();
     }
     
-    public void getMenus(MenuCallback callback) {
-        Call<ApiService.MenuResponse> call = apiService.getMenus();
-        call.enqueue(new Callback<ApiService.MenuResponse>() {
+    public boolean isLoggedIn() {
+        return sharedPreferences.getBoolean(Constants.KEY_IS_LOGGED_IN, false);
+    }
+    
+    public int getCurrentUserId() {
+        return sharedPreferences.getInt(Constants.KEY_USER_ID, -1);
+    }
+    
+    public String getCurrentUserName() {
+        return sharedPreferences.getString(Constants.KEY_USER_NAME, "");
+    }
+    
+    // Menu Methods
+    public void loadMenus() {
+        apiService.getMenus().enqueue(new Callback<ApiService.MenuResponse>() {
             @Override
             public void onResponse(Call<ApiService.MenuResponse> call, Response<ApiService.MenuResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    callback.onSuccess(response.body().getMenus(), response.body().getCategories());
+                    menusLiveData.postValue(response.body().getMenus());
+                    categoriesLiveData.postValue(response.body().getCategories());
                 } else {
-                    callback.onError("Gagal memuat menu");
+                    // Load dummy data on failure
+                    loadDummyMenus();
                 }
             }
             
             @Override
             public void onFailure(Call<ApiService.MenuResponse> call, Throwable t) {
-                Log.e(TAG, "Error loading menus", t);
-                callback.onError("Gagal memuat menu: " + t.getMessage());
+                loadDummyMenus();
             }
         });
     }
     
-    // ============== PAYMENT METHODS ==============
-    
-    public interface PaymentCallback {
-        void onSuccess(List<PaymentMethod> paymentMethods);
-        void onError(String error);
+    private void loadDummyMenus() {
+        List<MenuItem> dummyMenus = new ArrayList<>();
+        List<String> dummyCategories = new ArrayList<>();
+        
+        // Create dummy menu items
+        MenuItem espresso = new MenuItem();
+        espresso.setId(1);
+        espresso.setName("Espresso");
+        espresso.setCategory("Hot Coffee");
+        espresso.setDescription("Rich and bold espresso shot");
+        espresso.setImageUrl("https://via.placeholder.com/200x200/8B4513/FFFFFF?text=Espresso");
+        
+        List<MenuItem.Size> espressoSizes = new ArrayList<>();
+        espressoSizes.add(new MenuItem.Size("Small", 15000));
+        espressoSizes.add(new MenuItem.Size("Medium", 18000));
+        espressoSizes.add(new MenuItem.Size("Large", 22000));
+        espresso.setSizes(espressoSizes);
+        
+        MenuItem americano = new MenuItem();
+        americano.setId(2);
+        americano.setName("Americano");
+        americano.setCategory("Hot Coffee");
+        americano.setDescription("Espresso with hot water");
+        americano.setImageUrl("https://via.placeholder.com/200x200/654321/FFFFFF?text=Americano");
+        
+        List<MenuItem.Size> americanoSizes = new ArrayList<>();
+        americanoSizes.add(new MenuItem.Size("Small", 20000));
+        americanoSizes.add(new MenuItem.Size("Medium", 25000));
+        americanoSizes.add(new MenuItem.Size("Large", 30000));
+        americano.setSizes(americanoSizes);
+        
+        MenuItem icedCoffee = new MenuItem();
+        icedCoffee.setId(3);
+        icedCoffee.setName("Iced Coffee");
+        icedCoffee.setCategory("Cold Coffee");
+        icedCoffee.setDescription("Refreshing cold coffee");
+        icedCoffee.setImageUrl("https://via.placeholder.com/200x200/4A90E2/FFFFFF?text=Iced+Coffee");
+        
+        List<MenuItem.Size> icedSizes = new ArrayList<>();
+        icedSizes.add(new MenuItem.Size("Small", 18000));
+        icedSizes.add(new MenuItem.Size("Medium", 23000));
+        icedSizes.add(new MenuItem.Size("Large", 28000));
+        icedCoffee.setSizes(icedSizes);
+        
+        MenuItem croissant = new MenuItem();
+        croissant.setId(4);
+        croissant.setName("Croissant");
+        croissant.setCategory("Snacks");
+        croissant.setDescription("Buttery flaky pastry");
+        croissant.setImageUrl("https://via.placeholder.com/200x200/D2691E/FFFFFF?text=Croissant");
+        
+        List<MenuItem.Size> croissantSizes = new ArrayList<>();
+        croissantSizes.add(new MenuItem.Size("Regular", 25000));
+        croissant.setSizes(croissantSizes);
+        
+        dummyMenus.add(espresso);
+        dummyMenus.add(americano);
+        dummyMenus.add(icedCoffee);
+        dummyMenus.add(croissant);
+        
+        dummyCategories.add("Hot Coffee");
+        dummyCategories.add("Cold Coffee");
+        dummyCategories.add("Non Coffee");
+        dummyCategories.add("Snacks");
+        
+        menusLiveData.postValue(dummyMenus);
+        categoriesLiveData.postValue(dummyCategories);
     }
     
-    public void getPaymentMethods(PaymentCallback callback) {
-        Call<ApiService.PaymentResponse> call = apiService.getPaymentMethods();
-        call.enqueue(new Callback<ApiService.PaymentResponse>() {
+    // Payment Methods
+    public void loadPaymentMethods() {
+        apiService.getPaymentMethods().enqueue(new Callback<ApiService.PaymentResponse>() {
             @Override
             public void onResponse(Call<ApiService.PaymentResponse> call, Response<ApiService.PaymentResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    callback.onSuccess(response.body().getPaymentMethods());
+                    paymentMethodsLiveData.postValue(response.body().getPaymentMethods());
                 } else {
-                    callback.onError("Gagal memuat metode pembayaran");
+                    loadDummyPaymentMethods();
                 }
             }
             
             @Override
             public void onFailure(Call<ApiService.PaymentResponse> call, Throwable t) {
-                Log.e(TAG, "Error loading payment methods", t);
-                callback.onError("Gagal memuat metode pembayaran: " + t.getMessage());
+                loadDummyPaymentMethods();
             }
         });
     }
     
-    // ============== CART METHODS ==============
-// ============== CART METHODS (Lanjutan AppRepository.java) ==============
-    
-    public void addToCart(int userId, int menuId, String menuName, String menuImage, 
-                         String size, int quantity, double price) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        
-        // Check if item already exists in cart
-        Cursor cursor = db.query(DatabaseContract.CartEntry.TABLE_NAME,
-                null,
-                DatabaseContract.CartEntry.COLUMN_USER_ID + "=? AND " +
-                DatabaseContract.CartEntry.COLUMN_MENU_ID + "=? AND " +
-                DatabaseContract.CartEntry.COLUMN_SIZE + "=?",
-                new String[]{String.valueOf(userId), String.valueOf(menuId), size},
-                null, null, null);
-        
-        if (cursor.moveToFirst()) {
-            // Update existing item
-            int existingQuantity = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_QUANTITY));
-            int newQuantity = existingQuantity + quantity;
-            double newSubtotal = newQuantity * price;
-            
-            ContentValues values = new ContentValues();
-            values.put(DatabaseContract.CartEntry.COLUMN_QUANTITY, newQuantity);
-            values.put(DatabaseContract.CartEntry.COLUMN_SUBTOTAL, newSubtotal);
-            
-            db.update(DatabaseContract.CartEntry.TABLE_NAME,
-                    values,
-                    DatabaseContract.CartEntry.COLUMN_USER_ID + "=? AND " +
-                    DatabaseContract.CartEntry.COLUMN_MENU_ID + "=? AND " +
-                    DatabaseContract.CartEntry.COLUMN_SIZE + "=?",
-                    new String[]{String.valueOf(userId), String.valueOf(menuId), size});
-        } else {
-            // Insert new item
-            ContentValues values = new ContentValues();
-            values.put(DatabaseContract.CartEntry.COLUMN_USER_ID, userId);
-            values.put(DatabaseContract.CartEntry.COLUMN_MENU_ID, menuId);
-            values.put(DatabaseContract.CartEntry.COLUMN_MENU_NAME, menuName);
-            values.put(DatabaseContract.CartEntry.COLUMN_MENU_IMAGE, menuImage);
-            values.put(DatabaseContract.CartEntry.COLUMN_SIZE, size);
-            values.put(DatabaseContract.CartEntry.COLUMN_QUANTITY, quantity);
-            values.put(DatabaseContract.CartEntry.COLUMN_PRICE, price);
-            values.put(DatabaseContract.CartEntry.COLUMN_SUBTOTAL, quantity * price);
-            
-            db.insert(DatabaseContract.CartEntry.TABLE_NAME, null, values);
-        }
-        cursor.close();
+    private void loadDummyPaymentMethods() {
+        List<PaymentMethod> dummyPayments = new ArrayList<>();
+        dummyPayments.add(new PaymentMethod("DANA", "E-Wallet", "https://via.placeholder.com/50x50/00AA5B/FFFFFF?text=DANA"));
+        dummyPayments.add(new PaymentMethod("OVO", "E-Wallet", "https://via.placeholder.com/50x50/4C3BCF/FFFFFF?text=OVO"));
+        dummyPayments.add(new PaymentMethod("GoPay", "E-Wallet", "https://via.placeholder.com/50x50/00AED6/FFFFFF?text=GoPay"));
+        dummyPayments.add(new PaymentMethod("BCA", "Bank", "https://via.placeholder.com/50x50/0066CC/FFFFFF?text=BCA"));
+        dummyPayments.add(new PaymentMethod("Mandiri", "Bank", "https://via.placeholder.com/50x50/003D79/FFFFFF?text=Mandiri"));
+        paymentMethodsLiveData.postValue(dummyPayments);
     }
     
-    public void updateCartItem(int cartId, int quantity, double price) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        
-        ContentValues values = new ContentValues();
-        values.put(DatabaseContract.CartEntry.COLUMN_QUANTITY, quantity);
-        values.put(DatabaseContract.CartEntry.COLUMN_SUBTOTAL, quantity * price);
-        
-        db.update(DatabaseContract.CartEntry.TABLE_NAME,
-                values,
-                DatabaseContract.CartEntry.COLUMN_ID + "=?",
-                new String[]{String.valueOf(cartId)});
+    // Cart Methods
+    public void addToCart(CartItem cartItem) {
+        databaseHelper.insertCartItem(cartItem);
+        loadCartItems();
+    }
+    
+    public void updateCartItem(CartItem cartItem) {
+        databaseHelper.updateCartItem(cartItem);
+        loadCartItems();
     }
     
     public void removeFromCart(int cartId) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.delete(DatabaseContract.CartEntry.TABLE_NAME,
-                DatabaseContract.CartEntry.COLUMN_ID + "=?",
-                new String[]{String.valueOf(cartId)});
+        databaseHelper.deleteCartItem(cartId);
+        loadCartItems();
     }
     
-    public List<CartItem> getCartItems(int userId) {
-        List<CartItem> cartItems = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        
-        Cursor cursor = db.query(DatabaseContract.CartEntry.TABLE_NAME,
-                null,
-                DatabaseContract.CartEntry.COLUMN_USER_ID + "=?",
-                new String[]{String.valueOf(userId)},
-                null, null, null);
-        
-        while (cursor.moveToNext()) {
-            CartItem item = new CartItem();
-            item.setId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_ID)));
-            item.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_USER_ID)));
-            item.setMenuId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_MENU_ID)));
-            item.setMenuName(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_MENU_NAME)));
-            item.setMenuImage(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_MENU_IMAGE)));
-            item.setSize(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_SIZE)));
-            item.setQuantity(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_QUANTITY)));
-            item.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_PRICE)));
-            item.setSubtotal(cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_SUBTOTAL)));
-            
-            cartItems.add(item);
+    public void clearCart() {
+        databaseHelper.clearCart(getCurrentUserId());
+        loadCartItems();
+    }
+    
+    public void loadCartItems() {
+        List<CartItem> cartItems = databaseHelper.getCartItems(getCurrentUserId());
+        cartLiveData.postValue(cartItems);
+    }
+    
+    // Order Methods
+    public long createOrder(Order order) {
+        long orderId = databaseHelper.insertOrder(order);
+        if (orderId != -1) {
+            clearCart();
+            loadOrders();
         }
-        cursor.close();
-        return cartItems;
+        return orderId;
     }
     
-    public double getCartTotal(int userId) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        
-        Cursor cursor = db.rawQuery(
-                "SELECT SUM(" + DatabaseContract.CartEntry.COLUMN_SUBTOTAL + ") FROM " + 
-                DatabaseContract.CartEntry.TABLE_NAME + " WHERE " + 
-                DatabaseContract.CartEntry.COLUMN_USER_ID + "=?",
-                new String[]{String.valueOf(userId)});
-        
-        double total = 0;
-        if (cursor.moveToFirst()) {
-            total = cursor.getDouble(0);
-        }
-        cursor.close();
-        return total;
-    }
-    
-    public void clearCart(int userId) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.delete(DatabaseContract.CartEntry.TABLE_NAME,
-                DatabaseContract.CartEntry.COLUMN_USER_ID + "=?",
-                new String[]{String.valueOf(userId)});
-    }
-    
-    // ============== ORDER METHODS ==============
-    
-    public interface OrderCallback {
-        void onSuccess(int orderId);
-        void onError(String error);
-    }
-    
-    public void createOrder(int userId, int tableNumber, String paymentMethodName, 
-                           String paymentMethodType, double totalAmount, 
-                           List<CartItem> cartItems, OrderCallback callback) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        db.beginTransaction();
-        
-        try {
-            // Insert order
-            ContentValues orderValues = new ContentValues();
-            orderValues.put(DatabaseContract.OrderEntry.COLUMN_USER_ID, userId);
-            orderValues.put(DatabaseContract.OrderEntry.COLUMN_TABLE_NUMBER, tableNumber);
-            orderValues.put(DatabaseContract.OrderEntry.COLUMN_PAYMENT_METHOD_NAME, paymentMethodName);
-            orderValues.put(DatabaseContract.OrderEntry.COLUMN_PAYMENT_METHOD_TYPE, paymentMethodType);
-            orderValues.put(DatabaseContract.OrderEntry.COLUMN_TOTAL_AMOUNT, totalAmount);
-            orderValues.put(DatabaseContract.OrderEntry.COLUMN_STATUS, Constants.ORDER_STATUS_PREPARING);
-            
-            long orderId = db.insert(DatabaseContract.OrderEntry.TABLE_NAME, null, orderValues);
-            
-            if (orderId == -1) {
-                callback.onError("Gagal membuat pesanan");
-                return;
-            }
-            
-            // Insert order items
-            for (CartItem cartItem : cartItems) {
-                ContentValues itemValues = new ContentValues();
-                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_ORDER_ID, orderId);
-                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_MENU_ID, cartItem.getMenuId());
-                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_MENU_NAME, cartItem.getMenuName());
-                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_MENU_IMAGE, cartItem.getMenuImage());
-                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_SIZE, cartItem.getSize());
-                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_QUANTITY, cartItem.getQuantity());
-                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_PRICE, cartItem.getPrice());
-                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_SUBTOTAL, cartItem.getSubtotal());
-                
-                db.insert(DatabaseContract.OrderItemEntry.TABLE_NAME, null, itemValues);
-            }
-            
-            // Clear cart
-            clearCart(userId);
-            
-            db.setTransactionSuccessful();
-            callback.onSuccess((int) orderId);
-            
-        } catch (Exception e) {
-            Log.e(TAG, "Error creating order", e);
-            callback.onError("Gagal membuat pesanan: " + e.getMessage());
-        } finally {
-            db.endTransaction();
-        }
-    }
-    
-    public List<Order> getUserOrders(int userId) {
-        List<Order> orders = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        
-        Cursor cursor = db.query(DatabaseContract.OrderEntry.TABLE_NAME,
-                null,
-                DatabaseContract.OrderEntry.COLUMN_USER_ID + "=?",
-                new String[]{String.valueOf(userId)},
-                null, null, 
-                DatabaseContract.OrderEntry.COLUMN_CREATED_AT + " DESC");
-        
-        while (cursor.moveToNext()) {
-            Order order = new Order();
-            order.setId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_ID)));
-            order.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_USER_ID)));
-            order.setTableNumber(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_TABLE_NUMBER)));
-            order.setPaymentMethodName(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_PAYMENT_METHOD_NAME)));
-            order.setPaymentMethodType(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_PAYMENT_METHOD_TYPE)));
-            order.setTotalAmount(cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_TOTAL_AMOUNT)));
-            order.setStatus(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_STATUS)));
-            order.setCreatedAt(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_CREATED_AT)));
-            
-            // Get order items
-            order.setOrderItems(getOrderItems(order.getId()));
-            
-            orders.add(order);
-        }
-        cursor.close();
-        return orders;
-    }
-    
-    private List<OrderItem> getOrderItems(int orderId) {
-        List<OrderItem> orderItems = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        
-        Cursor cursor = db.query(DatabaseContract.OrderItemEntry.TABLE_NAME,
-                null,
-                DatabaseContract.OrderItemEntry.COLUMN_ORDER_ID + "=?",
-                new String[]{String.valueOf(orderId)},
-                null, null, null);
-        
-        while (cursor.moveToNext()) {
-            OrderItem item = new OrderItem();
-            item.setId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_ID)));
-            item.setOrderId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_ORDER_ID)));
-            item.setMenuId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_MENU_ID)));
-            item.setMenuName(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_MENU_NAME)));
-            item.setMenuImage(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_MENU_IMAGE)));
-            item.setSize(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_SIZE)));
-            item.setQuantity(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_QUANTITY)));
-            item.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_PRICE)));
-            item.setSubtotal(cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_SUBTOTAL)));
-            
-            orderItems.add(item);
-        }
-        cursor.close();
-        return orderItems;
+    public void loadOrders() {
+        List<Order> orders = databaseHelper.getUserOrders(getCurrentUserId());
+        ordersLiveData.postValue(orders);
     }
     
     public void updateOrderStatus(int orderId, String status) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        
-        ContentValues values = new ContentValues();
-        values.put(DatabaseContract.OrderEntry.COLUMN_STATUS, status);
-        
-        db.update(DatabaseContract.OrderEntry.TABLE_NAME,
-                values,
-                DatabaseContract.OrderEntry.COLUMN_ID + "=?",
-                new String[]{String.valueOf(orderId)});
+        databaseHelper.updateOrderStatus(orderId, status);
+        loadOrders();
+    }
+    
+    // LiveData Getters
+    public MutableLiveData<List<MenuItem>> getMenusLiveData() {
+        return menusLiveData;
+    }
+    
+    public MutableLiveData<List<String>> getCategoriesLiveData() {
+        return categoriesLiveData;
+    }
+    
+    public MutableLiveData<List<CartItem>> getCartLiveData() {
+        return cartLiveData;
+    }
+    
+    public MutableLiveData<List<Order>> getOrdersLiveData() {
+        return ordersLiveData;
+    }
+    
+    public MutableLiveData<List<PaymentMethod>> getPaymentMethodsLiveData() {
+        return paymentMethodsLiveData;
     }
 }
-
-// ============== NOTIFICATION RECEIVER ==============
 
 // NotificationReceiver.java
 package com.coffeshop.app.utils;
@@ -1034,77 +953,48 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
-
 import androidx.core.app.NotificationCompat;
-
-import com.coffeshop.app.R;
+import androidx.core.app.NotificationManagerCompat;
 
 public class NotificationReceiver extends BroadcastReceiver {
-    
-    private static final String CHANNEL_ID = "ORDER_NOTIFICATIONS";
-    private static final int NOTIFICATION_ID = 1001;
     
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        
-        if (Constants.ACTION_ORDER_CREATED.equals(action)) {
-            showNotification(context, "Pesanan Berhasil", "Pesanan Anda sedang diproses");
-            
-            // Schedule order completion after 30 seconds
-            int orderId = intent.getIntExtra("order_id", -1);
-            if (orderId != -1) {
-                scheduleOrderCompletion(context, orderId);
-            }
-            
-        } else if (Constants.ACTION_ORDER_COMPLETED.equals(action)) {
-            showNotification(context, "Pesanan Selesai", "Pesanan Anda sudah siap!");
+        if ("ORDER_CREATED".equals(action)) {
+            showNotification(context, "Pesanan Berhasil", "Pesanan Anda sedang diproses", Constants.NOTIFICATION_ORDER_CREATED);
+        } else if ("ORDER_COMPLETED".equals(action)) {
+            showNotification(context, "Pesanan Selesai", "Pesanan Anda sudah siap!", Constants.NOTIFICATION_ORDER_COMPLETED);
         }
     }
     
-    private void showNotification(Context context, String title, String message) {
-        NotificationManager notificationManager = 
-                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+    private void showNotification(Context context, String title, String message, int notificationId) {
+        createNotificationChannel(context);
         
-        // Create notification channel for Android O and above
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "Order Notifications",
-                    NotificationManager.IMPORTANCE_DEFAULT
-            );
-            notificationManager.createNotificationChannel(channel);
-        }
-        
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_coffee)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, Constants.NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setContentTitle(title)
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true);
         
-        notificationManager.notify(NOTIFICATION_ID, builder.build());
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        notificationManager.notify(notificationId, builder.build());
     }
     
-    private void scheduleOrderCompletion(Context context, int orderId) {
-        Handler handler = new Handler(Looper.getMainLooper());
-        handler.postDelayed(() -> {
-            // Update order status to complete
-            AppRepository repository = new AppRepository(context);
-            repository.updateOrderStatus(orderId, Constants.ORDER_STATUS_COMPLETE);
+    private void createNotificationChannel(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = Constants.NOTIFICATION_CHANNEL_NAME;
+            String description = "Notifications for coffee shop orders";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(Constants.NOTIFICATION_CHANNEL_ID, name, importance);
+            channel.setDescription(description);
             
-            // Send completion notification
-            Intent intent = new Intent(Constants.ACTION_ORDER_COMPLETED);
-            intent.putExtra("order_id", orderId);
-            context.sendBroadcast(intent);
-            
-        }, 30000); // 30 seconds delay
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 }
-
-// ============== VIEW MODELS ==============
 
 // AuthViewModel.java
 package com.coffeshop.app.viewmodels;
@@ -1113,96 +1003,128 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
-
 import com.coffeshop.app.models.User;
 import com.coffeshop.app.utils.AppRepository;
 import com.coffeshop.app.utils.ValidationUtils;
 
 public class AuthViewModel extends AndroidViewModel {
-    
     private AppRepository repository;
-    private MutableLiveData<User> userLiveData = new MutableLiveData<>();
-    private MutableLiveData<String> errorLiveData = new MutableLiveData<>();
-    private MutableLiveData<Boolean> loadingLiveData = new MutableLiveData<>();
+    private MutableLiveData<String> errorMessage = new MutableLiveData<>();
+    private MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
+    private MutableLiveData<User> loginResult = new MutableLiveData<>();
+    private MutableLiveData<Boolean> registerResult = new MutableLiveData<>();
     
     public AuthViewModel(@NonNull Application application) {
         super(application);
-        repository = new AppRepository(application);
-    }
-    
-    public MutableLiveData<User> getUserLiveData() {
-        return userLiveData;
-    }
-    
-    public MutableLiveData<String> getErrorLiveData() {
-        return errorLiveData;
-    }
-    
-    public MutableLiveData<Boolean> getLoadingLiveData() {
-        return loadingLiveData;
-    }
-    
-    public void register(String name, String email, String password) {
-        // Validation
-        if (!ValidationUtils.isValidName(name)) {
-            errorLiveData.setValue("Nama tidak boleh kosong");
-            return;
-        }
-        
-        if (!ValidationUtils.isValidEmail(email)) {
-            errorLiveData.setValue("Format email tidak valid");
-            return;
-        }
-        
-        if (!ValidationUtils.isValidPassword(password)) {
-            errorLiveData.setValue("Password minimal 6 karakter");
-            return;
-        }
-        
-        loadingLiveData.setValue(true);
-        
-        repository.registerUser(name, email, password, new AppRepository.UserCallback() {
-            @Override
-            public void onSuccess(User user) {
-                loadingLiveData.setValue(false);
-                userLiveData.setValue(user);
-            }
-            
-            @Override
-            public void onError(String error) {
-                loadingLiveData.setValue(false);
-                errorLiveData.setValue(error);
-            }
-        });
+        repository = AppRepository.getInstance(application);
+        isLoading.setValue(false);
     }
     
     public void login(String email, String password) {
-        // Validation
-        if (!ValidationUtils.isValidEmail(email)) {
-            errorLiveData.setValue("Format email tidak valid");
+        if (!validateLoginInput(email, password)) {
             return;
+        }
+        
+        isLoading.setValue(true);
+        
+        // Simulate network delay
+        new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+                User user = repository.loginUser(email, password);
+                
+                if (user != null) {
+                    loginResult.postValue(user);
+                } else {
+                    errorMessage.postValue("Email atau password salah");
+                }
+            } catch (InterruptedException e) {
+                errorMessage.postValue("Terjadi kesalahan");
+            } finally {
+                isLoading.postValue(false);
+            }
+        }).start();
+    }
+    
+    public void register(String name, String email, String password) {
+        if (!validateRegisterInput(name, email, password)) {
+            return;
+        }
+        
+        isLoading.setValue(true);
+        
+        new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+                User user = new User(name, email, password);
+                boolean success = repository.registerUser(user);
+                
+                if (success) {
+                    registerResult.postValue(true);
+                } else {
+                    errorMessage.postValue("Email sudah terdaftar");
+                }
+            } catch (Exception e) {
+                errorMessage.postValue("Terjadi kesalahan");
+            } finally {
+                isLoading.postValue(false);
+            }
+        }).start();
+    }
+    
+    private boolean validateLoginInput(String email, String password) {
+        if (email == null || email.trim().isEmpty()) {
+            errorMessage.setValue("Email tidak boleh kosong");
+            return false;
+        }
+        
+        if (!ValidationUtils.isValidEmail(email)) {
+            errorMessage.setValue("Format email tidak valid");
+            return false;
         }
         
         if (password == null || password.trim().isEmpty()) {
-            errorLiveData.setValue("Password tidak boleh kosong");
-            return;
+            errorMessage.setValue("Password tidak boleh kosong");
+            return false;
         }
         
-        loadingLiveData.setValue(true);
+        return true;
+    }
+    
+    private boolean validateRegisterInput(String name, String email, String password) {
+        if (!ValidationUtils.isValidName(name)) {
+            errorMessage.setValue("Nama minimal 2 karakter");
+            return false;
+        }
         
-        repository.loginUser(email, password, new AppRepository.LoginCallback() {
-            @Override
-            public void onSuccess(User user) {
-                loadingLiveData.setValue(false);
-                userLiveData.setValue(user);
-            }
-            
-            @Override
-            public void onError(String error) {
-                loadingLiveData.setValue(false);
-                errorLiveData.setValue(error);
-            }
-        });
+        if (!ValidationUtils.isValidEmail(email)) {
+            errorMessage.setValue("Format email tidak valid");
+            return false;
+        }
+        
+        if (!ValidationUtils.isValidPassword(password)) {
+            errorMessage.setValue("Password minimal 6 karakter");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Getters for LiveData
+    public MutableLiveData<String> getErrorMessage() {
+        return errorMessage;
+    }
+    
+    public MutableLiveData<Boolean> getIsLoading() {
+        return isLoading;
+    }
+    
+    public MutableLiveData<User> getLoginResult() {
+        return loginResult;
+    }
+    
+    public MutableLiveData<Boolean> getRegisterResult() {
+        return registerResult;
     }
 }
 
@@ -1213,95 +1135,175 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
-
-import com.coffeshop.app.models.CartItem;
-import com.coffeshop.app.models.MenuItem;
-import com.coffeshop.app.models.Order;
-import com.coffeshop.app.models.PaymentMethod;
+import com.coffeshop.app.models.*;
 import com.coffeshop.app.utils.AppRepository;
-
 import java.util.List;
+import java.util.ArrayList;
 
 public class MainViewModel extends AndroidViewModel {
-    
     private AppRepository repository;
-    private MutableLiveData<List<MenuItem>> menuLiveData = new MutableLiveData<>();
-    private MutableLiveData<List<String>> categoriesLiveData = new MutableLiveData<>();
-    private MutableLiveData<List<CartItem>> cartLiveData = new MutableLiveData<>();
-    private MutableLiveData<List<Order>> ordersLiveData = new MutableLiveData<>();
-    private MutableLiveData<List<PaymentMethod>> paymentMethodsLiveData = new MutableLiveData<>();
-    private MutableLiveData<String> errorLiveData = new MutableLiveData<>();
-    private MutableLiveData<Boolean> loadingLiveData = new MutableLiveData<>();
-    private MutableLiveData<Double> cartTotalLiveData = new MutableLiveData<>();
+    private MutableLiveData<List<MenuItem>> filteredMenus = new MutableLiveData<>();
+    private MutableLiveData<String> selectedCategory = new MutableLiveData<>();
+    private MutableLiveData<String> searchQuery = new MutableLiveData<>();
+    private MutableLiveData<Double> cartTotal = new MutableLiveData<>();
     
     public MainViewModel(@NonNull Application application) {
         super(application);
-        repository = new AppRepository(application);
+        repository = AppRepository.getInstance(application);
+        selectedCategory.setValue("Semua");
+        searchQuery.setValue("");
+        cartTotal.setValue(0.0);
+        
+        // Load initial data
+        repository.loadMenus();
+        repository.loadPaymentMethods();
+        repository.loadCartItems();
+        repository.loadOrders();
+        
+        // Observe cart changes to update total
+        repository.getCartLiveData().observeForever(cartItems -> {
+            if (cartItems != null) {
+                double total = 0;
+                for (CartItem item : cartItems) {
+                    total += item.getSubtotal();
+                }
+                cartTotal.setValue(total);
+            }
+        });
+        
+        // Observe menu changes to update filtered list
+        repository.getMenusLiveData().observeForever(menus -> {
+            filterMenus(menus);
+        });
+    }
+    
+    public void setSelectedCategory(String category) {
+        selectedCategory.setValue(category);
+        filterMenus(repository.getMenusLiveData().getValue());
+    }
+    
+    public void setSearchQuery(String query) {
+        searchQuery.setValue(query);
+        filterMenus(repository.getMenusLiveData().getValue());
+    }
+    
+    private void filterMenus(List<MenuItem> menus) {
+        if (menus == null) return;
+        
+        List<MenuItem> filtered = new ArrayList<>();
+        String category = selectedCategory.getValue();
+        String query = searchQuery.getValue();
+        
+        for (MenuItem menu : menus) {
+            boolean matchesCategory = "Semua".equals(category) || menu.getCategory().equals(category);
+            boolean matchesSearch = query == null || query.isEmpty() || 
+                    menu.getName().toLowerCase().contains(query.toLowerCase());
+            
+            if (matchesCategory && matchesSearch) {
+                filtered.add(menu);
+            }
+        }
+        
+        filteredMenus.setValue(filtered);
+    }
+    
+    public void refreshData() {
+        repository.loadMenus();
+        repository.loadOrders();
+    }
+    
+    public void addToCart(MenuItem menuItem, String size, int quantity) {
+        double price = 0;
+        for (MenuItem.Size s : menuItem.getSizes()) {
+            if (s.getSize().equals(size)) {
+                price = s.getPrice();
+                break;
+            }
+        }
+        
+        CartItem cartItem = new CartItem(
+            repository.getCurrentUserId(),
+            menuItem.getId(),
+            menuItem.getName(),
+            menuItem.getImageUrl(),
+            size,
+            quantity,
+            price
+        );
+        
+        repository.addToCart(cartItem);
+    }
+    
+    public void updateCartItem(CartItem cartItem) {
+        repository.updateCartItem(cartItem);
+    }
+    
+    public void removeFromCart(int cartId) {
+        repository.removeFromCart(cartId);
+    }
+    
+    public long createOrder(int tableNumber, PaymentMethod paymentMethod) {
+        List<CartItem> cartItems = repository.getCartLiveData().getValue();
+        if (cartItems == null || cartItems.isEmpty()) {
+            return -1;
+        }
+        
+        double total = cartTotal.getValue() != null ? cartTotal.getValue() : 0.0;
+        
+        Order order = new Order(
+            repository.getCurrentUserId(),
+            tableNumber,
+            paymentMethod.getName(),
+            paymentMethod.getType(),
+            total
+        );
+        
+        return repository.createOrder(order);
+    }
+    
+    public String getCurrentUserName() {
+        return repository.getCurrentUserName();
+    }
+    
+    public void logout() {
+        repository.logout();
     }
     
     // Getters for LiveData
-    public MutableLiveData<List<MenuItem>> getMenuLiveData() { return menuLiveData; }
-    public MutableLiveData<List<String>> getCategoriesLiveData() { return categoriesLiveData; }
-    public MutableLiveData<List<CartItem>> getCartLiveData() { return cartLiveData; }
-    public MutableLiveData<List<Order>> getOrdersLiveData() { return ordersLiveData; }
-    public MutableLiveData<List<PaymentMethod>> getPaymentMethodsLiveData() { return paymentMethodsLiveData; }
-    public MutableLiveData<String> getErrorLiveData() { return errorLiveData; }
-    public MutableLiveData<Boolean> getLoadingLiveData() { return loadingLiveData; }
-    public MutableLiveData<Double> getCartTotalLiveData() { return cartTotalLiveData; }
-    
-    public void loadMenus() {
-        loadingLiveData.setValue(true);
-        repository.getMenus(new AppRepository.MenuCallback() {
-            @Override
-            public void onSuccess(List<MenuItem> menus, List<String> categories) {
-                loadingLiveData.setValue(false);
-                menuLiveData.setValue(menus);
-                categoriesLiveData.setValue(categories);
-            }
-            
-            @Override
-            public void onError(String error) {
-                loadingLiveData.setValue(false);
-                errorLiveData.setValue(error);
-            }
-        });
+    public MutableLiveData<List<MenuItem>> getMenusLiveData() {
+        return repository.getMenusLiveData();
     }
     
-    public void loadCartItems(int userId) {
-        List<CartItem> cartItems = repository.getCartItems(userId);
-        cartLiveData.setValue(cartItems);
-        
-        double total = repository.getCartTotal(userId);
-        cartTotalLiveData.setValue(total);
+    public MutableLiveData<List<String>> getCategoriesLiveData() {
+        return repository.getCategoriesLiveData();
     }
     
-    public void loadOrders(int userId) {
-        List<Order> orders = repository.getUserOrders(userId);
-        ordersLiveData.setValue(orders);
+    public MutableLiveData<List<MenuItem>> getFilteredMenus() {
+        return filteredMenus;
     }
     
-    public void loadPaymentMethods() {
-        repository.getPaymentMethods(new AppRepository.PaymentCallback() {
-            @Override
-            public void onSuccess(List<PaymentMethod> paymentMethods) {
-                paymentMethodsLiveData.setValue(paymentMethods);
-            }
-            
-            @Override
-            public void onError(String error) {
-                errorLiveData.setValue(error);
-            }
-        });
+    public MutableLiveData<List<CartItem>> getCartLiveData() {
+        return repository.getCartLiveData();
     }
     
-    public void removeFromCart(int cartId, int userId) {
-        repository.removeFromCart(cartId);
-        loadCartItems(userId); // Refresh cart
+    public MutableLiveData<List<Order>> getOrdersLiveData() {
+        return repository.getOrdersLiveData();
     }
     
-    public void updateCartItem(int cartId, int quantity, double price, int userId) {
-        repository.updateCartItem(cartId, quantity, price);
-        loadCartItems(userId); // Refresh cart
+    public MutableLiveData<List<PaymentMethod>> getPaymentMethodsLiveData() {
+        return repository.getPaymentMethodsLiveData();
+    }
+    
+    public MutableLiveData<String> getSelectedCategory() {
+        return selectedCategory;
+    }
+    
+    public MutableLiveData<String> getSearchQuery() {
+        return searchQuery;
+    }
+    
+    public MutableLiveData<Double> getCartTotal() {
+        return cartTotal;
     }
 }
 
@@ -1312,79 +1314,175 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
-
+import com.coffeshop.app.models.MenuItem;
+import com.coffeshop.app.models.CartItem;
 import com.coffeshop.app.utils.AppRepository;
 
 public class DetailViewModel extends AndroidViewModel {
-    
     private AppRepository repository;
-    private MutableLiveData<Boolean> addToCartSuccessLiveData = new MutableLiveData<>();
-    private MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    private MutableLiveData<MenuItem> selectedMenuItem = new MutableLiveData<>();
+    private MutableLiveData<String> selectedSize = new MutableLiveData<>();
+    private MutableLiveData<Integer> quantity = new MutableLiveData<>();
+    private MutableLiveData<Double> currentPrice = new MutableLiveData<>();
+    private MutableLiveData<Double> totalPrice = new MutableLiveData<>();
+    private MutableLiveData<Boolean> isEditMode = new MutableLiveData<>();
+    private CartItem editingCartItem;
     
     public DetailViewModel(@NonNull Application application) {
         super(application);
-        repository = new AppRepository(application);
+        repository = AppRepository.getInstance(application);
+        quantity.setValue(1);
+        currentPrice.setValue(0.0);
+        totalPrice.setValue(0.0);
+        isEditMode.setValue(false);
     }
     
-    public MutableLiveData<Boolean> getAddToCartSuccessLiveData() {
-        return addToCartSuccessLiveData;
-    }
-    
-    public MutableLiveData<String> getErrorLiveData() {
-        return errorLiveData;
-    }
-    
-    public void addToCart(int userId, int menuId, String menuName, String menuImage,
-                         String size, int quantity, double price) {
-        try {
-            repository.addToCart(userId, menuId, menuName, menuImage, size, quantity, price);
-            addToCartSuccessLiveData.setValue(true);
-        } catch (Exception e) {
-            errorLiveData.setValue("Gagal menambahkan ke keranjang: " + e.getMessage());
+    public void setMenuItem(MenuItem menuItem) {
+        selectedMenuItem.setValue(menuItem);
+        if (menuItem != null && menuItem.getSizes() != null && !menuItem.getSizes().isEmpty()) {
+            // Set default size to first available size
+            MenuItem.Size firstSize = menuItem.getSizes().get(0);
+            setSelectedSize(firstSize.getSize());
         }
     }
     
-    public void updateCartItem(int cartId, int quantity, double price) {
-        try {
-            repository.updateCartItem(cartId, quantity, price);
-            addToCartSuccessLiveData.setValue(true);
-        } catch (Exception e) {
-            errorLiveData.setValue("Gagal mengupdate keranjang: " + e.getMessage());
+    public void setEditingCartItem(CartItem cartItem) {
+        editingCartItem = cartItem;
+        isEditMode.setValue(true);
+        
+        // Find the menu item from the repository
+        if (repository.getMenusLiveData().getValue() != null) {
+            for (MenuItem menuItem : repository.getMenusLiveData().getValue()) {
+                if (menuItem.getId() == cartItem.getMenuId()) {
+                    setMenuItem(menuItem);
+                    break;
+                }
+            }
         }
+        
+        // Set the cart item's current values
+        setSelectedSize(cartItem.getSize());
+        setQuantity(cartItem.getQuantity());
+    }
+    
+    public void setSelectedSize(String size) {
+        selectedSize.setValue(size);
+        updatePrices();
+    }
+    
+    public void setQuantity(int qty) {
+        if (qty < 1) qty = 1;
+        quantity.setValue(qty);
+        updatePrices();
+    }
+    
+    public void incrementQuantity() {
+        int currentQty = quantity.getValue() != null ? quantity.getValue() : 1;
+        setQuantity(currentQty + 1);
+    }
+    
+    public void decrementQuantity() {
+        int currentQty = quantity.getValue() != null ? quantity.getValue() : 1;
+        setQuantity(currentQty - 1);
+    }
+    
+    private void updatePrices() {
+        MenuItem menuItem = selectedMenuItem.getValue();
+        String size = selectedSize.getValue();
+        int qty = quantity.getValue() != null ? quantity.getValue() : 1;
+        
+        if (menuItem != null && size != null) {
+            double price = 0;
+            for (MenuItem.Size s : menuItem.getSizes()) {
+                if (s.getSize().equals(size)) {
+                    price = s.getPrice();
+                    break;
+                }
+            }
+            currentPrice.setValue(price);
+            totalPrice.setValue(price * qty);
+        }
+    }
+    
+    public void addToCart() {
+        MenuItem menuItem = selectedMenuItem.getValue();
+        String size = selectedSize.getValue();
+        int qty = quantity.getValue() != null ? quantity.getValue() : 1;
+        double price = currentPrice.getValue() != null ? currentPrice.getValue() : 0.0;
+        
+        if (menuItem != null && size != null) {
+            if (isEditMode.getValue() && editingCartItem != null) {
+                // Update existing cart item
+                editingCartItem.setSize(size);
+                editingCartItem.setQuantity(qty);
+                editingCartItem.setPrice(price);
+                repository.updateCartItem(editingCartItem);
+            } else {
+                // Add new cart item
+                CartItem cartItem = new CartItem(
+                    repository.getCurrentUserId(),
+                    menuItem.getId(),
+                    menuItem.getName(),
+                    menuItem.getImageUrl(),
+                    size,
+                    qty,
+                    price
+                );
+                repository.addToCart(cartItem);
+            }
+        }
+    }
+    
+    // Getters for LiveData
+    public MutableLiveData<MenuItem> getSelectedMenuItem() {
+        return selectedMenuItem;
+    }
+    
+    public MutableLiveData<String> getSelectedSize() {
+        return selectedSize;
+    }
+    
+    public MutableLiveData<Integer> getQuantity() {
+        return quantity;
+    }
+    
+    public MutableLiveData<Double> getCurrentPrice() {
+        return currentPrice;
+    }
+    
+    public MutableLiveData<Double> getTotalPrice() {
+        return totalPrice;
+    }
+    
+    public MutableLiveData<Boolean> getIsEditMode() {
+        return isEditMode;
     }
 }
 
-// ============== ACTIVITIES ==============
 
 // SplashActivity.java
 package com.coffeshop.app.activities;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.coffeshop.app.R;
-import com.coffeshop.app.utils.Constants;
+import com.coffeshop.app.utils.AppRepository;
 
 public class SplashActivity extends AppCompatActivity {
-    
-    private static final int SPLASH_DELAY = 3000; // 3 seconds
+    private static final int SPLASH_DURATION = 3000; // 3 seconds
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            SharedPreferences prefs = getSharedPreferences(Constants.PREF_NAME, MODE_PRIVATE);
-            boolean isLoggedIn = prefs.getBoolean(Constants.KEY_IS_LOGGED_IN, false);
-            
+        new Handler().postDelayed(() -> {
+            AppRepository repository = AppRepository.getInstance(this);
             Intent intent;
-            if (isLoggedIn) {
+            
+            if (repository.isLoggedIn()) {
                 intent = new Intent(SplashActivity.this, MainActivity.class);
             } else {
                 intent = new Intent(SplashActivity.this, AuthActivity.class);
@@ -1392,7 +1490,7 @@ public class SplashActivity extends AppCompatActivity {
             
             startActivity(intent);
             finish();
-        }, SPLASH_DELAY);
+        }, SPLASH_DURATION);
     }
 }
 
@@ -1400,73 +1498,13 @@ public class SplashActivity extends AppCompatActivity {
 package com.coffeshop.app.activities;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
-
+import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
-
 import com.coffeshop.app.R;
-import com.coffeshop.app.models.User;
-import com.coffeshop.app.utils.Constants;
 import com.coffeshop.app.viewmodels.AuthViewModel;
 
 public class AuthActivity extends AppCompatActivity {
-    
     private AuthViewModel viewModel;
-    
-    // Login Views
-    private EditText etLoginEmail, etLoginPassword;
-    private Button btnLogin;
-    private TextView tvGoToRegister;
-    
-    // Register Views
-    private EditText etRegisterName, etRegisterEmail, etRegisterPassword;
-    private Button btnRegister;
-    private TextView tvGoToLogin;
-    
-    private View loginLayout, registerLayout;
-    private ProgressBar progressBar;
-    
-    private boolean isLoginMode = true;
-    
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_auth);
-        
-        initViews();
-        setupViewModel();
-        setupClickListeners();
-    }
-    
-    private void initViews() {
-        // Login views
-        loginLayout = findViewById(R.id.loginLayout);
-        etLoginEmail = findViewById(R.id.etLoginEmail);
-        etLoginPassword = findViewById(R.id.etLoginPassword);
-        btnLogin = findViewById(R.id.btnLogin);
-        tvGoToRegister = findViewById(R.id.tvGoToRegister);
-        
-        // Register views
-        registerLayout = findViewById(R.id.registerLayout);
-        etRegisterName = findViewById(R.id.etRegisterName);
-        etRegisterEmail = findViewById(R.id.etRegisterEmail);
-        etRegisterPassword = findViewById(R.id.etRegisterPassword);
-        btnRegister = findViewById(R.id.btnRegister);
-        tvGoToLogin = findViewById(R.id.tvGoToLogin);
-        
-        progressBar = findViewById(R.id.progressBar);
-        
-        showLoginForm();
-    }
-    
-    private void setupViewModel() {
-        
-    
