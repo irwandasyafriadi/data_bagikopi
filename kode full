@@ -1,0 +1,1486 @@
+// 1. SplashActivity.java
+package com.example.coffeeshop;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Handler;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class SplashActivity extends AppCompatActivity {
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_splash);
+new Handler().postDelayed(() -> {
+Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
+startActivity(intent);
+finish();
+}, 3000);
+}
+}
+
+// 2. LoginActivity.java
+package com.example.coffeeshop;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class LoginActivity extends AppCompatActivity {
+private EditText etEmail, etPassword;
+private Button btnLogin;
+private TextView tvRegister;
+private DatabaseHelper dbHelper;
+private SharedPreferences sharedPreferences;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_login);
+initViews();
+dbHelper = new DatabaseHelper(this);
+sharedPreferences = getSharedPreferences("CoffeeShopPrefs", MODE_PRIVATE);
+// Check if user already logged in
+if (sharedPreferences.getBoolean("isLoggedIn", false)) {
+startActivity(new Intent(this, MainActivity.class));
+finish();
+return;
+}
+btnLogin.setOnClickListener(v -> loginUser());
+tvRegister.setOnClickListener(v -> {
+startActivity(new Intent(this, RegisterActivity.class));
+});
+}
+private void initViews() {
+etEmail = findViewById(R.id.etEmail);
+etPassword = findViewById(R.id.etPassword);
+btnLogin = findViewById(R.id.btnLogin);
+tvRegister = findViewById(R.id.tvRegister);
+}
+private void loginUser() {
+String email = etEmail.getText().toString().trim();
+String password = etPassword.getText().toString().trim();
+if (email.isEmpty() || password.isEmpty()) {
+Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+return;
+}
+User user = dbHelper.loginUser(email, password);
+if (user != null) {
+// Save session
+SharedPreferences.Editor editor = sharedPreferences.edit();
+editor.putBoolean("isLoggedIn", true);
+editor.putString("userName", user.getName());
+editor.putString("userEmail", user.getEmail());
+editor.apply();
+startActivity(new Intent(this, MainActivity.class));
+finish();
+} else {
+Toast.makeText(this, "Invalid credentials", Toast.LENGTH_SHORT).show();
+}
+}
+}
+
+// 3. RegisterActivity.java
+package com.example.coffeeshop;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class RegisterActivity extends AppCompatActivity {
+private EditText etName, etEmail, etPassword;
+private Button btnRegister;
+private DatabaseHelper dbHelper;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_register);
+initViews();
+dbHelper = new DatabaseHelper(this);
+btnRegister.setOnClickListener(v -> registerUser());
+}
+private void initViews() {
+etName = findViewById(R.id.etName);
+etEmail = findViewById(R.id.etEmail);
+etPassword = findViewById(R.id.etPassword);
+btnRegister = findViewById(R.id.btnRegister);
+}
+private void registerUser() {
+String name = etName.getText().toString().trim();
+String email = etEmail.getText().toString().trim();
+String password = etPassword.getText().toString().trim();
+if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
+Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+return;
+}
+if (dbHelper.registerUser(name, email, password)) {
+Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
+startActivity(new Intent(this, LoginActivity.class));
+finish();
+} else {
+Toast.makeText(this, "Registration failed. Email might already exist", Toast.LENGTH_SHORT).show();
+}
+}
+}
+
+// 4. MainActivity.java
+package com.example.coffeeshop;
+
+import android.os.Bundle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+public class MainActivity extends AppCompatActivity {
+private BottomNavigationView bottomNavigationView;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+bottomNavigationView = findViewById(R.id.bottomNavigationView);
+// Load default fragment
+loadFragment(new HomeFragment());
+bottomNavigationView.setOnItemSelectedListener(item -> {
+Fragment selectedFragment = null;
+if (item.getItemId() == R.id.nav_home) {
+selectedFragment = new HomeFragment();
+} else if (item.getItemId() == R.id.nav_cart) {
+selectedFragment = new CartFragment();
+} else if (item.getItemId() == R.id.nav_order) {
+selectedFragment = new OrderFragment();
+} else if (item.getItemId() == R.id.nav_profile) {
+selectedFragment = new ProfileFragment();
+}
+return loadFragment(selectedFragment);
+});
+}
+private boolean loadFragment(Fragment fragment) {
+if (fragment != null) {
+getSupportFragmentManager()
+.beginTransaction()
+.replace(R.id.fragmentContainer, fragment)
+.commit();
+return true;
+}
+return false;
+}
+}
+
+// 5. HomeFragment.java
+package com.example.coffeeshop;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.GridView;
+import android.widget.SearchView;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.fragment.app.Fragment;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import java.util.ArrayList;
+import java.util.List;
+
+public class HomeFragment extends Fragment {
+private TextView tvGreeting;
+private SearchView searchView;
+private GridView gridViewMenu;
+private MenuAdapter menuAdapter;
+private List<MenuItem> menuList;
+private List<MenuItem> filteredList;
+private ApiService apiService;
+
+@Override
+public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+View view = inflater.inflate(R.layout.fragment_home, container, false);
+initViews(view);
+setupGreeting();
+setupSearchView();
+loadMenuData();
+return view;
+}
+private void initViews(View view) {
+tvGreeting = view.findViewById(R.id.tvGreeting);
+searchView = view.findViewById(R.id.searchView);
+gridViewMenu = view.findViewById(R.id.gridViewMenu);
+menuList = new ArrayList<>();
+filteredList = new ArrayList<>();
+apiService = ApiClient.getRetrofitInstance().create(ApiService.class);
+}
+private void setupGreeting() {
+SharedPreferences prefs = getActivity().getSharedPreferences("CoffeeShopPrefs", getActivity().MODE_PRIVATE);
+String userName = prefs.getString("userName", "User");
+tvGreeting.setText("Hai, " + userName);
+}
+private void setupSearchView() {
+searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+@Override
+public boolean onQueryTextSubmit(String query) {
+return false;
+}
+@Override
+public boolean onQueryTextChange(String newText) {
+filterMenu(newText);
+return true;
+}
+});
+}
+private void filterMenu(String query) {
+filteredList.clear();
+if (query.isEmpty()) {
+filteredList.addAll(menuList);
+} else {
+for (MenuItem item : menuList) {
+if (item.getName().toLowerCase().contains(query.toLowerCase()) ||
+item.getCategory().toLowerCase().contains(query.toLowerCase())) {
+filteredList.add(item);
+}
+}
+}
+if (menuAdapter != null) {
+menuAdapter.notifyDataSetChanged();
+}
+}
+private void loadMenuData() {
+// For demo purposes, we'll create dummy data
+// In real app, you would use Retrofit to fetch from API
+createDummyData();
+menuAdapter = new MenuAdapter(getContext(), filteredList);
+gridViewMenu.setAdapter(menuAdapter);
+gridViewMenu.setOnItemClickListener((parent, view, position, id) -> {
+MenuItem selectedItem = filteredList.get(position);
+Intent intent = new Intent(getContext(), DetailMenuActivity.class);
+intent.putExtra("menuItem", selectedItem);
+startActivity(intent);
+});
+}
+private void createDummyData() {
+menuList.add(new MenuItem(1, "Ubee Coffee", "Premium coffee blend", "coffee",
+35000, 40000, 45000, "https://example.com/ubee_coffee.jpg"));
+menuList.add(new MenuItem(2, "Avocado Velvet", "Creamy avocado drink", "non-coffee",
+35000, 40000, 45000, "https://example.com/avocado_velvet.jpg"));
+menuList.add(new MenuItem(3, "Caramel Latte", "Sweet caramel coffee", "coffee",
+40000, 45000, 50000, "https://example.com/caramel_latte.jpg"));
+menuList.add(new MenuItem(4, "Chocolate Smoothie", "Rich chocolate drink", "non-coffee",
+30000, 35000, 40000, "https://example.com/chocolate_smoothie.jpg"));
+filteredList.addAll(menuList);
+}
+}
+
+// 6. DetailMenuActivity.java
+package com.example.coffeeshop;
+
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import com.bumptech.glide.Glide;
+
+public class DetailMenuActivity extends AppCompatActivity {
+private ImageView ivMenuImage;
+private TextView tvMenuName, tvMenuDescription, tvMenuPrice;
+private RadioGroup rgSize;
+private Button btnAddToCart;
+private MenuItem menuItem;
+private DatabaseHelper dbHelper;
+private String selectedSize = "Regular"
+private int selectedPrice;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_detail_menu);
+initViews();
+dbHelper = new DatabaseHelper(this);
+menuItem = (MenuItem) getIntent().getSerializableExtra("menuItem");
+if (menuItem != null) {
+setupMenuDetails();
+}
+setupSizeSelection();
+btnAddToCart.setOnClickListener(v -> addToCart());
+}
+private void initViews() {
+ivMenuImage = findViewById(R.id.ivMenuImage);
+tvMenuName = findViewById(R.id.tvMenuName);
+tvMenuDescription = findViewById(R.id.tvMenuDescription);
+tvMenuPrice = findViewById(R.id.tvMenuPrice);
+rgSize = findViewById(R.id.rgSize);
+btnAddToCart = findViewById(R.id.btnAddToCart);
+}
+private void setupMenuDetails() {
+tvMenuName.setText(menuItem.getName());
+tvMenuDescription.setText(menuItem.getDescription());
+selectedPrice = menuItem.getPriceRegular();
+tvMenuPrice.setText("Rp" + Utils.formatPrice(selectedPrice));
+Glide.with(this)
+.load(menuItem.getImageUrl())
+.placeholder(R.drawable.placeholder_image)
+.into(ivMenuImage);
+}
+private void setupSizeSelection() {
+rgSize.setOnCheckedChangeListener((group, checkedId) -> {
+if (checkedId == R.id.rbRegular) {
+selectedSize = "Regular"
+selectedPrice = menuItem.getPriceRegular();
+} else if (checkedId == R.id.rbLarge) {
+selectedSize = "Large"
+selectedPrice = menuItem.getPriceLarge();
+} else if (checkedId == R.id.rbJumbo) {
+selectedSize = "Jumbo"
+selectedPrice = menuItem.getPriceJumbo();
+}
+tvMenuPrice.setText("Rp" + Utils.formatPrice(selectedPrice));
+});
+}
+private void addToCart() {
+CartItem cartItem = new CartItem();
+cartItem.setMenuId(menuItem.getId());
+cartItem.setName(menuItem.getName());
+cartItem.setSize(selectedSize);
+cartItem.setPrice(selectedPrice);
+cartItem.setQuantity(1);
+cartItem.setImageUrl(menuItem.getImageUrl());
+if (dbHelper.addToCart(cartItem)) {
+Toast.makeText(this, "Added to cart", Toast.LENGTH_SHORT).show();
+finish();
+} else {
+Toast.makeText(this, "Failed to add to cart", Toast.LENGTH_SHORT).show();
+}
+}
+}
+
+// 7. CartFragment.java
+package com.example.coffeeshop;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.TextView;
+import androidx.fragment.app.Fragment;
+import java.util.List;
+
+public class CartFragment extends Fragment {
+private ListView listViewCart;
+private TextView tvTotalPrice;
+private Button btnCheckout;
+private CartAdapter cartAdapter;
+private List<CartItem> cartItems;
+private DatabaseHelper dbHelper;
+
+@Override
+public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+View view = inflater.inflate(R.layout.fragment_cart, container, false);
+initViews(view);
+dbHelper = new DatabaseHelper(getContext());
+loadCartItems();
+btnCheckout.setOnClickListener(v -> checkout());
+return view;
+}
+private void initViews(View view) {
+listViewCart = view.findViewById(R.id.listViewCart);
+tvTotalPrice = view.findViewById(R.id.tvTotalPrice);
+btnCheckout = view.findViewById(R.id.btnCheckout);
+}
+private void loadCartItems() {
+cartItems = dbHelper.getCartItems();
+cartAdapter = new CartAdapter(getContext(), cartItems, this);
+listViewCart.setAdapter(cartAdapter);
+updateTotalPrice();
+}
+public void updateTotalPrice() {
+int total = 0;
+for (CartItem item : cartItems) {
+total += item.getPrice() * item.getQuantity();
+}
+tvTotalPrice.setText("Total: Rp" + Utils.formatPrice(total));
+}
+public void refreshCart() {
+cartItems = dbHelper.getCartItems();
+cartAdapter.updateItems(cartItems);
+updateTotalPrice();
+}
+private void checkout() {
+if (cartItems.isEmpty()) {
+return;
+}
+Intent intent = new Intent(getContext(), CheckoutActivity.class);
+startActivity(intent);
+}
+@Override
+public void onResume() {
+super.onResume();
+refreshCart();
+}
+}
+
+// 8. CheckoutActivity.java
+package com.example.coffeeshop;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import com.google.gson.Gson;
+import java.util.List;
+
+public class CheckoutActivity extends AppCompatActivity {
+private ListView listViewOrderSummary;
+private TextView tvTotalAmount;
+private CardView cvDana, cvGopay, cvBca;
+private Button btnPay;
+private List<CartItem> cartItems;
+private DatabaseHelper dbHelper;
+private String selectedPaymentMethod = ""
+private int totalAmount = 0;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_checkout);
+initViews();
+dbHelper = new DatabaseHelper(this);
+loadOrderSummary();
+setupPaymentMethods();
+btnPay.setOnClickListener(v -> processPayment());
+}
+private void initViews() {
+listViewOrderSummary = findViewById(R.id.listViewOrderSummary);
+tvTotalAmount = findViewById(R.id.tvTotalAmount);
+cvDana = findViewById(R.id.cvDana);
+cvGopay = findViewById(R.id.cvGopay);
+cvBca = findViewById(R.id.cvBca);
+btnPay = findViewById(R.id.btnPay);
+}
+private void loadOrderSummary() {
+cartItems = dbHelper.getCartItems();
+CheckoutAdapter adapter = new CheckoutAdapter(this, cartItems);
+listViewOrderSummary.setAdapter(adapter);
+for (CartItem item : cartItems) {
+totalAmount += item.getPrice() * item.getQuantity();
+}
+tvTotalAmount.setText("Total: Rp" + Utils.formatPrice(totalAmount));
+}
+private void setupPaymentMethods() {
+cvDana.setOnClickListener(v -> selectPaymentMethod("Dana"));
+cvGopay.setOnClickListener(v -> selectPaymentMethod("GoPay"));
+cvBca.setOnClickListener(v -> selectPaymentMethod("BCA"));
+}
+private void selectPaymentMethod(String method) {
+selectedPaymentMethod = method;
+// Reset all card backgrounds
+cvDana.setCardBackgroundColor(getResources().getColor(android.R.color.white));
+cvGopay.setCardBackgroundColor(getResources().getColor(android.R.color.white));
+cvBca.setCardBackgroundColor(getResources().getColor(android.R.color.white));
+// Highlight selected card
+switch (method) {
+case "Dana":
+cvDana.setCardBackgroundColor(getResources().getColor(R.color.selected_payment));
+break;
+case "GoPay":
+cvGopay.setCardBackgroundColor(getResources().getColor(R.color.selected_payment));
+break;
+case "BCA":
+cvBca.setCardBackgroundColor(getResources().getColor(R.color.selected_payment));
+break;
+}
+}
+private void processPayment() {
+if (selectedPaymentMethod.isEmpty()) {
+Toast.makeText(this, "Please select payment method", Toast.LENGTH_SHORT).show();
+return;
+}
+// Convert cart items to JSON string
+Gson gson = new Gson();
+String itemsJson = gson.toJson(cartItems);
+// Save order to database
+Order order = new Order();
+order.setItems(itemsJson);
+order.setTotal(totalAmount);
+order.setStatus("Diproses");
+order.setPaymentMethod(selectedPaymentMethod);
+order.setCreatedAt(System.currentTimeMillis());
+if (dbHelper.addOrder(order)) {
+// Clear cart
+dbHelper.clearCart();
+// Start notification service
+NotificationHelper.scheduleOrderNotification(this, order.getId());
+Toast.makeText(this, "Payment successful", Toast.LENGTH_SHORT).show();
+Intent intent = new Intent(this, OrderSuccessActivity.class);
+startActivity(intent);
+finish();
+} else {
+Toast.makeText(this, "Payment failed", Toast.LENGTH_SHORT).show();
+}
+}
+}
+
+// 9. OrderSuccessActivity.java
+package com.example.coffeeshop;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class OrderSuccessActivity extends AppCompatActivity {
+private Button btnBackToHome;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_order_success);
+btnBackToHome = findViewById(R.id.btnBackToHome);
+btnBackToHome.setOnClickListener(v -> {
+Intent intent = new Intent(this, MainActivity.class);
+intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+startActivity(intent);
+finish();
+});
+}
+}
+
+// 10. OrderFragment.java
+package com.example.coffeeshop;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ListView;
+import androidx.fragment.app.Fragment;
+import java.util.List;
+
+public class OrderFragment extends Fragment {
+private ListView listViewOrders;
+private OrderAdapter orderAdapter;
+private List<Order> orders;
+private DatabaseHelper dbHelper;
+
+@Override
+public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+View view = inflater.inflate(R.layout.fragment_order, container, false);
+initViews(view);
+dbHelper = new DatabaseHelper(getContext());
+loadOrders();
+return view;
+}
+private void initViews(View view) {
+listViewOrders = view.findViewById(R.id.listViewOrders);
+}
+private void loadOrders() {
+orders = dbHelper.getOrders();
+orderAdapter = new OrderAdapter(getContext(), orders);
+listViewOrders.setAdapter(orderAdapter);
+}
+@Override
+public void onResume() {
+super.onResume();
+loadOrders();
+}
+}
+
+// 11. ProfileFragment.java
+package com.example.coffeeshop;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+import androidx.fragment.app.Fragment;
+
+public class ProfileFragment extends Fragment {
+private TextView tvUserName, tvUserEmail;
+private Button btnLogout;
+private SharedPreferences sharedPreferences;
+
+@Override
+public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+View view = inflater.inflate(R.layout.fragment_profile, container, false);
+initViews(view);
+sharedPreferences = getActivity().getSharedPreferences("CoffeeShopPrefs", getActivity().MODE_PRIVATE);
+loadUserData();
+btnLogout.setOnClickListener(v -> logout());
+return view;
+}
+private void initViews(View view) {
+tvUserName = view.findViewById(R.id.tvUserName);
+tvUserEmail = view.findViewById(R.id.tvUserEmail);
+btnLogout = view.findViewById(R.id.btnLogout);
+}
+private void loadUserData() {
+String userName = sharedPreferences.getString("userName", "User");
+String userEmail = sharedPreferences.getString("userEmail", "user@example.com");
+tvUserName.setText(userName);
+tvUserEmail.setText(userEmail);
+}
+private void logout() {
+SharedPreferences.Editor editor = sharedPreferences.edit();
+editor.clear();
+editor.apply();
+Intent intent = new Intent(getActivity(), LoginActivity.class);
+intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+startActivity(intent);
+getActivity().finish();
+}
+}
+
+// 12. DatabaseHelper.java
+package com.example.coffeeshop;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DatabaseHelper extends SQLiteOpenHelper {
+private static final String DATABASE_NAME = "CoffeeShop.db"
+private static final int DATABASE_VERSION = 1;
+// Users table
+private static final String TABLE_USERS = "users"
+private static final String COLUMN_USER_ID = "id"
+private static final String COLUMN_USER_NAME = "name"
+private static final String COLUMN_USER_EMAIL = "email"
+private static final String COLUMN_USER_PASSWORD = "password"
+// Cart table
+private static final String TABLE_CART = "cart"
+private static final String COLUMN_CART_ID = "id"
+private static final String COLUMN_CART_MENU_ID = "menu_id"
+private static final String COLUMN_CART_NAME = "name"
+private static final String COLUMN_CART_SIZE = "size"
+private static final String COLUMN_CART_PRICE = "price"
+private static final String COLUMN_CART_QUANTITY = "quantity"
+private static final String COLUMN_CART_IMAGE_URL = "image_url"
+// Orders table
+private static final String TABLE_ORDERS = "orders"
+private static final String COLUMN_ORDER_ID = "id"
+private static final String COLUMN_ORDER_ITEMS = "items"
+private static final String COLUMN_ORDER_TOTAL = "total"
+private static final String COLUMN_ORDER_STATUS = "status"
+private static final String COLUMN_ORDER_PAYMENT_METHOD = "payment_method"
+private static final String COLUMN_ORDER_CREATED_AT = "created_at"
+
+public DatabaseHelper(Context context) {
+super(context, DATABASE_NAME, null, DATABASE_VERSION);
+}
+
+@Override
+public void onCreate(SQLiteDatabase db) {
+// Create users table
+String CREATE_USERS_TABLE = "CREATE TABLE " + TABLE_USERS + "("
++ COLUMN_USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
++ COLUMN_USER_NAME + " TEXT,"
++ COLUMN_USER_EMAIL + " TEXT UNIQUE,"
++ COLUMN_USER_PASSWORD + " TEXT" + ")"
+db.execSQL(CREATE_USERS_TABLE);
+// Create cart table
+String CREATE_CART_TABLE = "CREATE TABLE " + TABLE_CART + "("
++ COLUMN_CART_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
++ COLUMN_CART_MENU_ID + " INTEGER,"
++ COLUMN_CART_NAME + " TEXT,"
++ COLUMN_CART_SIZE + " TEXT,"
++ COLUMN_CART_PRICE + " INTEGER,"
++ COLUMN_CART_QUANTITY + " INTEGER,"
++ COLUMN_CART_IMAGE_URL + " TEXT" + ")"
+db.execSQL(CREATE_CART_TABLE);
+// Create orders table
+String CREATE_ORDERS_TABLE = "CREATE TABLE " + TABLE_ORDERS + "("
++ COLUMN_ORDER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
++ COLUMN_ORDER_ITEMS + " TEXT,"
++ COLUMN_ORDER_TOTAL + " INTEGER,"
++ COLUMN_ORDER_STATUS + " TEXT,"
++ COLUMN_ORDER_PAYMENT_METHOD + " TEXT,"
++ COLUMN_ORDER_CREATED_AT + " INTEGER" + ")"
+db.execSQL(CREATE_ORDERS_TABLE);
+}
+
+@Override
+public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+db.execSQL("DROP TABLE IF EXISTS " + TABLE_CART);
+db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDERS);
+onCreate(db);
+}
+// User methods
+public boolean registerUser(String name, String email, String password) {
+SQLiteDatabase db = this.getWritableDatabase();
+ContentValues values = new ContentValues();
+values.put(COLUMN_USER_NAME, name);
+values.put(COLUMN_USER_EMAIL, email);
+values.put(COLUMN_USER_PASSWORD, password);
+long result = db.insert(TABLE_USERS, null, values);
+return result != -1;
+}
+public User loginUser(String email, String password) {
+SQLiteDatabase db = this.getReadableDatabase();
+Cursor cursor = db.query(TABLE_USERS, null,
+COLUMN_USER_EMAIL + "=? AND " + COLUMN_USER_PASSWORD + "=?",
+new String[]{email, password}, null, null, null);
+if (cursor != null && cursor.moveToFirst()) {
+User user = new User();
+user.setId(cursor.getInt(cursor.getColumnIndex(COLUMN_USER_ID)));
+user.setName(cursor.getString(cursor.getColumnIndex(COLUMN_USER_NAME)));
+user.setEmail(cursor.getString(cursor.getColumnIndex(COLUMN_USER_EMAIL)));
+cursor.close();
+return user;
+}
+if (cursor != null) cursor.close();
+return null;
+}
+// Cart methods
+public boolean addToCart(CartItem item) {
+SQLiteDatabase db = this.getWritableDatabase();
+// Check if item already exists in cart
+Cursor cursor = db.query(TABLE_CART, null,
+COLUMN_CART_MENU_ID + "=? AND " + COLUMN_CART_SIZE + "=?",
+new String[]{String.valueOf(item.getMenuId()), item.getSize()},
+null, null, null);
+if (cursor != null && cursor.moveToFirst()) {
+// Update quantity
+int currentQuantity = cursor.getInt(cursor.getColumnIndex(COLUMN_CART_QUANTITY));
+ContentValues values = new ContentValues();
+values.put(COLUMN_CART_QUANTITY, currentQuantity + item.getQuantity());
+int id = cursor.getInt(cursor.getColumnIndex(COLUMN_CART_ID));
+cursor.close();
+return db.update(TABLE_CART, values, COLUMN_CART_ID + "=?",
+new String[]{String.valueOf(id)}) > 0;
+} else {
+// Insert new item
+ContentValues values = new ContentValues();
+values.put(COLUMN_CART_MENU_ID, item.getMenuId());
+values.put(COLUMN_CART_NAME, item.getName());
+values.put(COLUMN_CART_SIZE, item.getSize());
+values.put(COLUMN_CART_PRICE, item.getPrice());
+values.put(COLUMN_CART_QUANTITY, item.getQuantity());
+values.put(COLUMN_CART_IMAGE_URL, item.getImageUrl());
+if (cursor != null) cursor.close();
+return db.insert(TABLE_CART, null, values) != -1;
+}
+}
+public List<CartItem> getCartItems() {
+List<CartItem> cartItems = new ArrayList<>();
+SQLiteDatabase db = this.getReadableDatabase();
+Cursor cursor = db.query(TABLE_CART, null, null, null, null, null, null);
+if (cursor != null && cursor.moveToFirst()) {
+do {
+CartItem item = new CartItem();
+item.setId(cursor.getInt(cursor.getColumnIndex(COLUMN_CART_ID)));
+item.setMenuId(cursor.getInt(cursor.getColumnIndex(COLUMN_CART_MENU_ID)));
+item.setName(cursor.getString(cursor.getColumnIndex(COLUMN_CART_NAME)));
+item.setSize(cursor.getString(cursor.getColumnIndex(COLUMN_CART_SIZE)));
+item.setPrice(cursor.getInt(cursor.getColumnIndex(COLUMN_CART_PRICE)));
+item.setQuantity(cursor.getInt(cursor.getColumnIndex(COLUMN_CART_QUANTITY)));
+item.setImageUrl(cursor.getString(cursor.getColumnIndex(COLUMN_CART_IMAGE_URL)));
+cartItems.add(item);
+} while (cursor.moveToNext());
+cursor.close();
+}
+return cartItems;
+}
+public boolean updateCartItem(CartItem item) {
+SQLiteDatabase db = this.getWritableDatabase();
+ContentValues values = new ContentValues();
+values.put(COLUMN_CART_QUANTITY, item.getQuantity());
+values.put(COLUMN_CART_SIZE, item.getSize());
+values.put(COLUMN_CART_PRICE, item.getPrice());
+return db.update(TABLE_CART, values, COLUMN_CART_ID + "=?",
+new String[]{String.valueOf(item.getId())}) > 0;
+}
+public boolean removeFromCart(int cartId) {
+SQLiteDatabase db = this.getWritableDatabase();
+return db.delete(TABLE_CART, COLUMN_CART_ID + "=?",
+new String[]{String.valueOf(cartId)}) > 0;
+}
+public void clearCart() {
+SQLiteDatabase db = this.getWritableDatabase();
+db.delete(TABLE_CART, null, null);
+}
+// Order methods
+public boolean addOrder(Order order) {
+SQLiteDatabase db = this.getWritableDatabase();
+ContentValues values = new ContentValues();
+values.put(COLUMN_ORDER_ITEMS, order.getItems());
+values.put(COLUMN_ORDER_TOTAL, order.getTotal());
+values.put(COLUMN_ORDER_STATUS, order.getStatus());
+values.put(COLUMN_ORDER_PAYMENT_METHOD, order.getPaymentMethod());
+values.put(COLUMN_ORDER_CREATED_AT, order.getCreatedAt());
+long result = db.insert(TABLE_ORDERS, null, values);
+if (result != -1) {
+order.setId((int) result);
+return true;
+}
+return false;
+}
+public List<Order> getOrders() {
+List<Order> orders = new ArrayList<>();
+SQLiteDatabase db = this.getReadableDatabase();
+Cursor cursor = db.query(TABLE_ORDERS, null, null, null, null, null,
+COLUMN_ORDER_CREATED_AT + " DESC");
+if (cursor != null && cursor.moveToFirst()) {
+do {
+Order order = new Order();
+order.setId(cursor.getInt(cursor.getColumnIndex(COLUMN_ORDER_ID)));
+order.setItems(cursor.getString(cursor.getColumnIndex(COLUMN_ORDER_ITEMS)));
+order.setTotal(cursor.getInt(cursor.getColumnIndex(COLUMN_ORDER_TOTAL)));
+order.setStatus(cursor.getString(cursor.getColumnIndex(COLUMN_ORDER_STATUS)));
+order.setPaymentMethod(cursor.getString(cursor.getColumnIndex(COLUMN_ORDER_PAYMENT_METHOD)));
+order.setCreatedAt(cursor.getLong(cursor.getColumnIndex(COLUMN_ORDER_CREATED_AT)));
+orders.add(order);
+} while (cursor.moveToNext());
+cursor.close();
+}
+return orders;
+}
+public boolean updateOrderStatus(int orderId, String status) {
+SQLiteDatabase db = this.getWritableDatabase();
+ContentValues values = new ContentValues();
+values.put(COLUMN_ORDER_STATUS, status);
+return db.update(TABLE_ORDERS, values, COLUMN_ORDER_ID + "=?",
+new String[]{String.valueOf(orderId)}) > 0;
+}
+}
+
+// 13. Model Classes
+
+// User.java
+package com.example.coffeeshop;
+
+public class User {
+private int id;
+private String name;
+private String email;
+private String password;
+public User() {}
+public User(String name, String email, String password) {
+this.name = name;
+this.email = email;
+this.password = password;
+}
+// Getters and Setters
+public int getId() { return id; }
+public void setId(int id) { this.id = id; }
+public String getName() { return name; }
+public void setName(String name) { this.name = name; }
+public String getEmail() { return email; }
+public void setEmail(String email) { this.email = email; }
+public String getPassword() { return password; }
+public void setPassword(String password) { this.password = password; }
+}
+
+// MenuItem.java
+package com.example.coffeeshop;
+
+import java.io.Serializable;
+
+public class MenuItem implements Serializable {
+private int id;
+private String name;
+private String description;
+private String category;
+private int priceRegular;
+private int priceLarge;
+private int priceJumbo;
+private String imageUrl;
+public MenuItem() {}
+public MenuItem(int id, String name, String description, String category,
+int priceRegular, int priceLarge, int priceJumbo, String imageUrl) {
+this.id = id;
+this.name = name;
+this.description = description;
+this.category = category;
+this.priceRegular = priceRegular;
+this.priceLarge = priceLarge;
+this.priceJumbo = priceJumbo;
+this.imageUrl = imageUrl;
+}
+// Getters and Setters
+public int getId() { return id; }
+public void setId(int id) { this.id = id; }
+public String getName() { return name; }
+public void setName(String name) { this.name = name; }
+public String getDescription() { return description; }
+public void setDescription(String description) { this.description = description; }
+public String getCategory() { return category; }
+public void setCategory(String category) { this.category = category; }
+public int getPriceRegular() { return priceRegular; }
+public void setPriceRegular(int priceRegular) { this.priceRegular = priceRegular; }
+public int getPriceLarge() { return priceLarge; }
+public void setPriceLarge(int priceLarge) { this.priceLarge = priceLarge; }
+public int getPriceJumbo() { return priceJumbo; }
+public void setPriceJumbo(int priceJumbo) { this.priceJumbo = priceJumbo; }
+public String getImageUrl() { return imageUrl; }
+public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+}
+
+// CartItem.java
+package com.example.coffeeshop;
+
+public class CartItem {
+private int id;
+private int menuId;
+private String name;
+private String size;
+private int price;
+private int quantity;
+private String imageUrl;
+public CartItem() {}
+// Getters and Setters
+public int getId() { return id; }
+public void setId(int id) { this.id = id; }
+public int getMenuId() { return menuId; }
+public void setMenuId(int menuId) { this.menuId = menuId; }
+public String getName() { return name; }
+public void setName(String name) { this.name = name; }
+public String getSize() { return size; }
+public void setSize(String size) { this.size = size; }
+public int getPrice() { return price; }
+public void setPrice(int price) { this.price = price; }
+public int getQuantity() { return quantity; }
+public void setQuantity(int quantity) { this.quantity = quantity; }
+public String getImageUrl() { return imageUrl; }
+public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+}
+
+// Order.java
+package com.example.coffeeshop;
+
+public class Order {
+private int id;
+private String items;
+private int total;
+private String status;
+private String paymentMethod;
+private long createdAt;
+public Order() {}
+// Getters and Setters
+public int getId() { return id; }
+public void setId(int id) { this.id = id; }
+public String getItems() { return items; }
+public void setItems(String items) { this.items = items; }
+public int getTotal() { return total; }
+public void setTotal(int total) { this.total = total; }
+public String getStatus() { return status; }
+public void setStatus(String status) { this.status = status; }
+public String getPaymentMethod() { return paymentMethod; }
+public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+public long getCreatedAt() { return createdAt; }
+public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
+}
+
+// 14. Adapter Classes
+
+// MenuAdapter.java
+package com.example.coffeeshop;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.TextView;
+import com.bumptech.glide.Glide;
+import java.util.List;
+
+public class MenuAdapter extends BaseAdapter {
+private Context context;
+private List<MenuItem> menuItems;
+private LayoutInflater inflater;
+
+public MenuAdapter(Context context, List<MenuItem> menuItems) {
+this.context = context;
+this.menuItems = menuItems;
+this.inflater = LayoutInflater.from(context);
+}
+
+@Override
+public int getCount() {
+return menuItems.size();
+}
+
+@Override
+public Object getItem(int position) {
+return menuItems.get(position);
+}
+
+@Override
+public long getItemId(int position) {
+return position;
+}
+
+@Override
+public View getView(int position, View convertView, ViewGroup parent) {
+ViewHolder holder;
+if (convertView == null) {
+convertView = inflater.inflate(R.layout.item_menu, parent, false);
+holder = new ViewHolder();
+holder.ivMenuImage = convertView.findViewById(R.id.ivMenuImage);
+holder.tvMenuName = convertView.findViewById(R.id.tvMenuName);
+holder.tvMenuPrice = convertView.findViewById(R.id.tvMenuPrice);
+holder.tvMenuCategory = convertView.findViewById(R.id.tvMenuCategory);
+convertView.setTag(holder);
+} else {
+holder = (ViewHolder) convertView.getTag();
+}
+MenuItem item = menuItems.get(position);
+holder.tvMenuName.setText(item.getName());
+holder.tvMenuPrice.setText("Rp" + Utils.formatPrice(item.getPriceRegular()));
+holder.tvMenuCategory.setText(item.getCategory());
+Glide.with(context)
+.load(item.getImageUrl())
+.placeholder(R.drawable.placeholder_image)
+.into(holder.ivMenuImage);
+return convertView;
+}
+private static class ViewHolder {
+ImageView ivMenuImage;
+TextView tvMenuName;
+TextView tvMenuPrice;
+TextView tvMenuCategory;
+}
+}
+
+// CartAdapter.java
+package com.example.coffeeshop;
+
+import android.app.AlertDialog;
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+import com.bumptech.glide.Glide;
+import java.util.List;
+
+public class CartAdapter extends BaseAdapter {
+private Context context;
+private List<CartItem> cartItems;
+private LayoutInflater inflater;
+private CartFragment cartFragment;
+private DatabaseHelper dbHelper;
+
+public CartAdapter(Context context, List<CartItem> cartItems, CartFragment cartFragment) {
+this.context = context;
+this.cartItems = cartItems;
+this.cartFragment = cartFragment;
+this.inflater = LayoutInflater.from(context);
+this.dbHelper = new DatabaseHelper(context);
+}
+
+@Override
+public int getCount() {
+return cartItems.size();
+}
+
+@Override
+public Object getItem(int position) {
+return cartItems.get(position);
+}
+
+@Override
+public long getItemId(int position) {
+return position;
+}
+
+@Override
+public View getView(int position, View convertView, ViewGroup parent) {
+ViewHolder holder;
+if (convertView == null) {
+convertView = inflater.inflate(R.layout.item_cart, parent, false);
+holder = new ViewHolder();
+holder.ivItemImage = convertView.findViewById(R.id.ivItemImage);
+holder.tvItemName = convertView.findViewById(R.id.tvItemName);
+holder.tvItemSize = convertView.findViewById(R.id.tvItemSize);
+holder.tvItemPrice = convertView.findViewById(R.id.tvItemPrice);
+holder.tvQuantity = convertView.findViewById(R.id.tvQuantity);
+holder.btnIncrease = convertView.findViewById(R.id.btnIncrease);
+holder.btnDecrease = convertView.findViewById(R.id.btnDecrease);
+holder.btnEditSize = convertView.findViewById(R.id.btnEditSize);
+holder.btnRemove = convertView.findViewById(R.id.btnRemove);
+convertView.setTag(holder);
+} else {
+holder = (ViewHolder) convertView.getTag();
+}
+CartItem item = cartItems.get(position);
+holder.tvItemName.setText(item.getName());
+holder.tvItemSize.setText("Size: " + item.getSize());
+holder.tvItemPrice.setText("Rp" + Utils.formatPrice(item.getPrice()));
+holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
+Glide.with(context)
+.load(item.getImageUrl())
+.placeholder(R.drawable.placeholder_image)
+.into(holder.ivItemImage);
+// Button listeners
+holder.btnIncrease.setOnClickListener(v -> {
+item.setQuantity(item.getQuantity() + 1);
+dbHelper.updateCartItem(item);
+notifyDataSetChanged();
+cartFragment.updateTotalPrice();
+});
+holder.btnDecrease.setOnClickListener(v -> {
+if (item.getQuantity() > 1) {
+item.setQuantity(item.getQuantity() - 1);
+dbHelper.updateCartItem(item);
+notifyDataSetChanged();
+cartFragment.updateTotalPrice();
+}
+});
+holder.btnEditSize.setOnClickListener(v -> showEditSizeDialog(item, position));
+holder.btnRemove.setOnClickListener(v -> {
+new AlertDialog.Builder(context)
+.setTitle("Remove Item")
+.setMessage("Are you sure you want to remove this item?")
+.setPositiveButton("Yes", (dialog, which) -> {
+dbHelper.removeFromCart(item.getId());
+cartFragment.refreshCart();
+})
+.setNegativeButton("No", null)
+.show();
+});
+return convertView;
+}
+private void showEditSizeDialog(CartItem item, int position) {
+String[] sizes = {"Regular", "Large", "Jumbo"};
+int[] prices = {35000, 40000, 45000}; // Default prices, should be from menu data
+new AlertDialog.Builder(context)
+.setTitle("Select Size")
+.setSingleChoiceItems(sizes, getSizeIndex(item.getSize()), (dialog, which) -> {
+item.setSize(sizes[which]);
+item.setPrice(prices[which]);
+dbHelper.updateCartItem(item);
+notifyDataSetChanged();
+cartFragment.updateTotalPrice();
+dialog.dismiss();
+})
+.setNegativeButton("Cancel", null)
+.show();
+}
+private int getSizeIndex(String size) {
+switch (size) {
+case "Regular": return 0;
+case "Large": return 1;
+case "Jumbo": return 2;
+default: return 0;
+}
+}
+public void updateItems(List<CartItem> newItems) {
+this.cartItems = newItems;
+notifyDataSetChanged();
+}
+private static class ViewHolder {
+ImageView ivItemImage;
+TextView tvItemName, tvItemSize, tvItemPrice, tvQuantity;
+ImageButton btnIncrease, btnDecrease, btnEditSize, btnRemove;
+}
+}
+
+// CheckoutAdapter.java
+package com.example.coffeeshop;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.TextView;
+import com.bumptech.glide.Glide;
+import java.util.List;
+
+public class CheckoutAdapter extends BaseAdapter {
+private Context context;
+private List<CartItem> items;
+private LayoutInflater inflater;
+
+public CheckoutAdapter(Context context, List<CartItem> items) {
+this.context = context;
+this.items = items;
+this.inflater = LayoutInflater.from(context);
+}
+
+@Override
+public int getCount() {
+return items.size();
+}
+
+@Override
+public Object getItem(int position) {
+return items.get(position);
+}
+
+@Override
+public long getItemId(int position) {
+return position;
+}
+
+@Override
+public View getView(int position, View convertView, ViewGroup parent) {
+ViewHolder holder;
+if (convertView == null) {
+convertView = inflater.inflate(R.layout.item_checkout, parent, false);
+holder = new ViewHolder();
+holder.ivItemImage = convertView.findViewById(R.id.ivItemImage);
+holder.tvItemName = convertView.findViewById(R.id.tvItemName);
+holder.tvItemDetails = convertView.findViewById(R.id.tvItemDetails);
+holder.tvItemTotal = convertView.findViewById(R.id.tvItemTotal);
+convertView.setTag(holder);
+} else {
+holder = (ViewHolder) convertView.getTag();
+}
+CartItem item = items.get(position);
+holder.tvItemName.setText(item.getName());
+holder.tvItemDetails.setText("Size: " + item.getSize() + " | Qty: " + item.getQuantity());
+holder.tvItemTotal.setText("Rp" + Utils.formatPrice(item.getPrice() * item.getQuantity()));
+Glide.with(context)
+.load(item.getImageUrl())
+.placeholder(R.drawable.placeholder_image)
+.into(holder.ivItemImage);
+return convertView;
+}
+private static class ViewHolder {
+ImageView ivItemImage;
+TextView tvItemName, tvItemDetails, tvItemTotal;
+}
+}
+
+// OrderAdapter.java
+package com.example.coffeeshop;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.ImageView;
+import com.bumptech.glide.Glide;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+public class OrderAdapter extends BaseAdapter {
+private Context context;
+private List<Order> orders;
+private LayoutInflater inflater;
+private DatabaseHelper dbHelper;
+
+public OrderAdapter(Context context, List<Order> orders) {
+this.context = context;
+this.orders = orders;
+this.inflater = LayoutInflater.from(context);
+this.dbHelper = new DatabaseHelper(context);
+}
+
+@Override
+public int getCount() {
+return orders.size();
+}
+
+@Override
+public Object getItem(int position) {
+return orders.get(position);
+}
+
+@Override
+public long getItemId(int position) {
+return position;
+}
+
+@Override
+public View getView(int position, View convertView, ViewGroup parent) {
+ViewHolder holder;
+if (convertView == null) {
+convertView = inflater.inflate(R.layout.item_order, parent, false);
+holder = new ViewHolder();
+holder.tvOrderId = convertView.findViewById(R.id.tvOrderId);
+holder.tvOrderDate = convertView.findViewById(R.id.tvOrderDate);
+holder.tvOrderStatus = convertView.findViewById(R.id.tvOrderStatus);
+holder.layoutItems = convertView.findViewById(R.id.layoutItems);
+holder.tvOrderTotal = convertView.findViewById(R.id.tvOrderTotal);
+holder.btnReorder = convertView.findViewById(R.id.btnReorder);
+convertView.setTag(holder);
+} else {
+holder = (ViewHolder) convertView.getTag();
+}
+Order order = orders.get(position);
+holder.tvOrderId.setText("📦 Pesanan #" + order.getId());
+SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault());
+holder.tvOrderDate.setText("🕒 " + sdf.format(new Date(order.getCreatedAt())));
+holder.tvOrderStatus.setText("📌 Status: " + order.getStatus());
+holder.tvOrderTotal.setText("Total: Rp" + Utils.formatPrice(order.getTotal()));
+// Parse and display order items
+displayOrderItems(holder.layoutItems, order.getItems());
+holder.btnReorder.setOnClickListener(v -> reorderItems(order));
+return convertView;
+}
+private void displayOrderItems(LinearLayout layoutItems, String itemsJson) {
+layoutItems.removeAllViews();
+try {
+Gson gson = new Gson();
+Type listType = new TypeToken<List<CartItem>>(){}.getType();
+List<CartItem> items = gson.fromJson(itemsJson, listType);
+for (CartItem item : items) {
+View itemView = inflater.inflate(R.layout.item_order_detail, layoutItems, false);
+ImageView ivItemImage = itemView.findViewById(R.id.ivItemImage);
+TextView tvItemName = itemView.findViewById(R.id.tvItemName);
+TextView tvItemDetails = itemView.findViewById(R.id.tvItemDetails);
+tvItemName.setText(item.getName());
+tvItemDetails.setText("Size: " + item.getSize() + " | Qty: " +
+item.getQuantity() + " | Rp" + Utils.formatPrice(item.getPrice()));
+Glide.with(context)
+.load(item.getImageUrl())
+.placeholder(R.drawable.placeholder_image)
+.into(ivItemImage);
+layoutItems.addView(itemView);
+}
+} catch (Exception e) {
+e.printStackTrace();
+}
+}
+private void reorderItems(Order order) {
+try {
+Gson gson = new Gson();
+Type listType = new TypeToken<List<CartItem>>(){}.getType();
+List<CartItem> items = gson.fromJson(order.getItems(), listType);
+for (CartItem item : items) {
+// Reset cart item ID to add as new item
+item.setId(0);
+dbHelper.addToCart(item);
+}
+Toast.makeText(context, "Items added to cart", Toast.LENGTH_SHORT).show();
+} catch (Exception e) {
+Toast.makeText(context, "Failed to reorder", Toast.LENGTH_SHORT).show();
+e.printStackTrace();
+}
+}
+private static class ViewHolder {
+TextView tvOrderId, tvOrderDate, tvOrderStatus, tvOrderTotal;
+LinearLayout layoutItems;
+Button btnReorder;
+}
+}
+
+// 15. Utility Classes
+
+// Utils.java
+package com.example.coffeeshop;
+
+import java.text.NumberFormat;
+import java.util.Locale;
+
+public class Utils {
+public static String formatPrice(int price) {
+NumberFormat formatter = NumberFormat.getNumberInstance(Locale.getDefault());
+return formatter.format(price);
+}
+}
+
+// 16. Notification Helper
+
+// NotificationHelper.java
+package com.example.coffeeshop;
+
+import android.app.AlarmManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
+import androidx.core.app.NotificationCompat;
+
+public class NotificationHelper {
+private static final String CHANNEL_ID = "order_notifications"
+private static final String CHANNEL_NAME = "Order Notifications"
+public static void createNotificationChannel(Context context) {
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+NotificationChannel channel = new NotificationChannel(
+CHANNEL_ID,
+CHANNEL_NAME,
+NotificationManager.IMPORTANCE_HIGH
+);
+NotificationManager manager = context.getSystemService(NotificationManager.class);
+manager.createNotificationChannel(channel);
+}
+}
+public static void scheduleOrderNotification(Context context, int orderId) {
+Intent intent = new Intent(context, NotificationReceiver.class);
+intent.putExtra("orderId", orderId);
+PendingIntent pendingIntent = PendingIntent.getBroadcast(
+context, orderId, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+long triggerTime = System.currentTimeMillis() + 10000; // 10 seconds
+alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+}
+}
+
+// NotificationReceiver.java
+package com.example.coffeeshop;
+
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import androidx.core.app.NotificationCompat;
+
+public class NotificationReceiver extends BroadcastReceiver {
+@Override
+public void onReceive(Context context, Intent intent) {
+int orderId = intent.getIntExtra("orderId", 0);
+// Update order status in database
+DatabaseHelper dbHelper = new DatabaseHelper(context);
+dbHelper.updateOrderStatus(orderId, "Selesai");
+// Show notification
+showOrderCompleteNotification(context, orderId);
+}
+private void showOrderCompleteNotification(Context context, int orderId) {
+Intent notificationIntent = new Intent(context, MainActivity.class);
+PendingIntent pendingIntent = PendingIntent.getActivity(
+context, 0
