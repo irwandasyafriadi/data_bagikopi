@@ -1,5 +1,6 @@
-[
-    {
+{
+  "menus": [
+          {
         "id": 1,
         "name": "Caramel Machiato",
         "category": "coffee",
@@ -208,4 +209,7 @@
             { "size": "regular", "price": 31000 }
         ]
     }
-]
+  ],
+  "categories": ["coffee", "non-coffee", "meals"]
+}
+
