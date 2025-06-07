@@ -8,7 +8,6 @@
         "sizes": [
             { "size": "regular", "price": 35000 },
             { "size": "medium", "price": 40000 }
-            
         ]
     },
     {
@@ -76,7 +75,7 @@
         "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/f879f034-a0b3-4ec0-a7ce-4ba67a5738bc_Go-Biz_20240206_174428.jpeg",
         "sizes": [
             { "size": "regular", "price": 25000 },
-            { "size": "medium", "price": 40000 },
+            { "size": "medium", "price": 40000 }
         ]
     },
     {
