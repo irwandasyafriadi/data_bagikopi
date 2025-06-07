@@ -6,7 +6,9 @@
         "description": "Espresso with steamed milk, vanilla syrup, and caramel drizzle.",
         "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/82246031-cbd5-4b0e-8022-19d9161d8679_Go-Biz_20240528_102510.jpeg",
         "sizes": [
-            { "size": "regular", "price": 35000 }
+            { "size": "regular", "price": 35000 },
+            { "size": "medium", "price": 40000 }
+            
         ]
     },
     {
@@ -16,7 +18,9 @@
         "description": "Rich coffee with the sweet and nutty flavor of hazelnut.",
         "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/27c2779d-5a47-4f85-9bc8-dceefe575a84_Go-Biz_20240528_095301.jpeg",
         "sizes": [
-            { "size": "regular", "price": 25000 }
+            { "size": "regular", "price": 25000 },
+            { "size": "medium", "price": 40000 },
+            { "size": "large", "price": 50000 }
         ]
     },
     {
@@ -26,7 +30,8 @@
         "description": "Smooth latte blended with rich cocoa for a chocolatey twist.",
         "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/9e2ee6f4-248e-4348-bf22-9c4a721a3e9f_Go-Biz_20240528_103618.jpeg",
         "sizes": [
-            { "size": "regular", "price": 35000 }
+            { "size": "regular", "price": 35000 },
+            { "size": "medium", "price": 40000 }
         ]
     },
     {
@@ -36,7 +41,8 @@
         "description": "Latte sweetened with natural palm sugar (gula aren) for a unique flavor.",
         "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/2a5e14a9-375c-4fc9-9255-4aa23e820e60_Go-Biz_20240528_095042.jpeg",
         "sizes": [
-            { "size": "regular", "price": 25000 }
+            { "size": "regular", "price": 25000 },
+            { "size": "medium", "price": 40000 }
         ]
     },
     {
@@ -46,7 +52,9 @@
         "description": "Specialty coffee with a hint of honey for natural sweetness.",
         "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/a2f82c23-0fca-4d1b-a57c-c99ed2938af5_Go-Biz_20240206_174323.jpeg",
         "sizes": [
-            { "size": "regular", "price": 35000 }
+            { "size": "regular", "price": 35000 },
+            { "size": "medium", "price": 40000 },
+            { "size": "large", "price": 50000 }
         ]
     },
     {
@@ -56,7 +64,8 @@
         "description": "Creamy avocado blended with milk for a refreshing drink.",
         "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/2faa1199-3e65-4530-a842-2d422f74f7f7_Go-Biz_20250228_163717.jpeg",
         "sizes": [
-            { "size": "regular", "price": 35000 }
+            { "size": "regular", "price": 35000 },
+            { "size": "large", "price": 50000 }
         ]
     },
     {
@@ -66,7 +75,8 @@
         "description": "Creamy milk with rich chocolate flavor, served cold.",
         "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/f879f034-a0b3-4ec0-a7ce-4ba67a5738bc_Go-Biz_20240206_174428.jpeg",
         "sizes": [
-            { "size": "regular", "price": 25000 }
+            { "size": "regular", "price": 25000 },
+            { "size": "medium", "price": 40000 },
         ]
     },
     {
