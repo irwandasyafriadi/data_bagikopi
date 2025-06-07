@@ -772,4 +772,701 @@ public class AppRepository {
     }
     
     // ============== CART METHODS ==============
+// ============== CART METHODS (Lanjutan AppRepository.java) ==============
+    
+    public void addToCart(int userId, int menuId, String menuName, String menuImage, 
+                         String size, int quantity, double price) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        
+        // Check if item already exists in cart
+        Cursor cursor = db.query(DatabaseContract.CartEntry.TABLE_NAME,
+                null,
+                DatabaseContract.CartEntry.COLUMN_USER_ID + "=? AND " +
+                DatabaseContract.CartEntry.COLUMN_MENU_ID + "=? AND " +
+                DatabaseContract.CartEntry.COLUMN_SIZE + "=?",
+                new String[]{String.valueOf(userId), String.valueOf(menuId), size},
+                null, null, null);
+        
+        if (cursor.moveToFirst()) {
+            // Update existing item
+            int existingQuantity = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_QUANTITY));
+            int newQuantity = existingQuantity + quantity;
+            double newSubtotal = newQuantity * price;
+            
+            ContentValues values = new ContentValues();
+            values.put(DatabaseContract.CartEntry.COLUMN_QUANTITY, newQuantity);
+            values.put(DatabaseContract.CartEntry.COLUMN_SUBTOTAL, newSubtotal);
+            
+            db.update(DatabaseContract.CartEntry.TABLE_NAME,
+                    values,
+                    DatabaseContract.CartEntry.COLUMN_USER_ID + "=? AND " +
+                    DatabaseContract.CartEntry.COLUMN_MENU_ID + "=? AND " +
+                    DatabaseContract.CartEntry.COLUMN_SIZE + "=?",
+                    new String[]{String.valueOf(userId), String.valueOf(menuId), size});
+        } else {
+            // Insert new item
+            ContentValues values = new ContentValues();
+            values.put(DatabaseContract.CartEntry.COLUMN_USER_ID, userId);
+            values.put(DatabaseContract.CartEntry.COLUMN_MENU_ID, menuId);
+            values.put(DatabaseContract.CartEntry.COLUMN_MENU_NAME, menuName);
+            values.put(DatabaseContract.CartEntry.COLUMN_MENU_IMAGE, menuImage);
+            values.put(DatabaseContract.CartEntry.COLUMN_SIZE, size);
+            values.put(DatabaseContract.CartEntry.COLUMN_QUANTITY, quantity);
+            values.put(DatabaseContract.CartEntry.COLUMN_PRICE, price);
+            values.put(DatabaseContract.CartEntry.COLUMN_SUBTOTAL, quantity * price);
+            
+            db.insert(DatabaseContract.CartEntry.TABLE_NAME, null, values);
+        }
+        cursor.close();
+    }
+    
+    public void updateCartItem(int cartId, int quantity, double price) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        
+        ContentValues values = new ContentValues();
+        values.put(DatabaseContract.CartEntry.COLUMN_QUANTITY, quantity);
+        values.put(DatabaseContract.CartEntry.COLUMN_SUBTOTAL, quantity * price);
+        
+        db.update(DatabaseContract.CartEntry.TABLE_NAME,
+                values,
+                DatabaseContract.CartEntry.COLUMN_ID + "=?",
+                new String[]{String.valueOf(cartId)});
+    }
+    
+    public void removeFromCart(int cartId) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.delete(DatabaseContract.CartEntry.TABLE_NAME,
+                DatabaseContract.CartEntry.COLUMN_ID + "=?",
+                new String[]{String.valueOf(cartId)});
+    }
+    
+    public List<CartItem> getCartItems(int userId) {
+        List<CartItem> cartItems = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        
+        Cursor cursor = db.query(DatabaseContract.CartEntry.TABLE_NAME,
+                null,
+                DatabaseContract.CartEntry.COLUMN_USER_ID + "=?",
+                new String[]{String.valueOf(userId)},
+                null, null, null);
+        
+        while (cursor.moveToNext()) {
+            CartItem item = new CartItem();
+            item.setId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_ID)));
+            item.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_USER_ID)));
+            item.setMenuId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_MENU_ID)));
+            item.setMenuName(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_MENU_NAME)));
+            item.setMenuImage(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_MENU_IMAGE)));
+            item.setSize(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_SIZE)));
+            item.setQuantity(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_QUANTITY)));
+            item.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_PRICE)));
+            item.setSubtotal(cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseContract.CartEntry.COLUMN_SUBTOTAL)));
+            
+            cartItems.add(item);
+        }
+        cursor.close();
+        return cartItems;
+    }
+    
+    public double getCartTotal(int userId) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        
+        Cursor cursor = db.rawQuery(
+                "SELECT SUM(" + DatabaseContract.CartEntry.COLUMN_SUBTOTAL + ") FROM " + 
+                DatabaseContract.CartEntry.TABLE_NAME + " WHERE " + 
+                DatabaseContract.CartEntry.COLUMN_USER_ID + "=?",
+                new String[]{String.valueOf(userId)});
+        
+        double total = 0;
+        if (cursor.moveToFirst()) {
+            total = cursor.getDouble(0);
+        }
+        cursor.close();
+        return total;
+    }
+    
+    public void clearCart(int userId) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.delete(DatabaseContract.CartEntry.TABLE_NAME,
+                DatabaseContract.CartEntry.COLUMN_USER_ID + "=?",
+                new String[]{String.valueOf(userId)});
+    }
+    
+    // ============== ORDER METHODS ==============
+    
+    public interface OrderCallback {
+        void onSuccess(int orderId);
+        void onError(String error);
+    }
+    
+    public void createOrder(int userId, int tableNumber, String paymentMethodName, 
+                           String paymentMethodType, double totalAmount, 
+                           List<CartItem> cartItems, OrderCallback callback) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.beginTransaction();
+        
+        try {
+            // Insert order
+            ContentValues orderValues = new ContentValues();
+            orderValues.put(DatabaseContract.OrderEntry.COLUMN_USER_ID, userId);
+            orderValues.put(DatabaseContract.OrderEntry.COLUMN_TABLE_NUMBER, tableNumber);
+            orderValues.put(DatabaseContract.OrderEntry.COLUMN_PAYMENT_METHOD_NAME, paymentMethodName);
+            orderValues.put(DatabaseContract.OrderEntry.COLUMN_PAYMENT_METHOD_TYPE, paymentMethodType);
+            orderValues.put(DatabaseContract.OrderEntry.COLUMN_TOTAL_AMOUNT, totalAmount);
+            orderValues.put(DatabaseContract.OrderEntry.COLUMN_STATUS, Constants.ORDER_STATUS_PREPARING);
+            
+            long orderId = db.insert(DatabaseContract.OrderEntry.TABLE_NAME, null, orderValues);
+            
+            if (orderId == -1) {
+                callback.onError("Gagal membuat pesanan");
+                return;
+            }
+            
+            // Insert order items
+            for (CartItem cartItem : cartItems) {
+                ContentValues itemValues = new ContentValues();
+                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_ORDER_ID, orderId);
+                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_MENU_ID, cartItem.getMenuId());
+                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_MENU_NAME, cartItem.getMenuName());
+                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_MENU_IMAGE, cartItem.getMenuImage());
+                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_SIZE, cartItem.getSize());
+                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_QUANTITY, cartItem.getQuantity());
+                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_PRICE, cartItem.getPrice());
+                itemValues.put(DatabaseContract.OrderItemEntry.COLUMN_SUBTOTAL, cartItem.getSubtotal());
+                
+                db.insert(DatabaseContract.OrderItemEntry.TABLE_NAME, null, itemValues);
+            }
+            
+            // Clear cart
+            clearCart(userId);
+            
+            db.setTransactionSuccessful();
+            callback.onSuccess((int) orderId);
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating order", e);
+            callback.onError("Gagal membuat pesanan: " + e.getMessage());
+        } finally {
+            db.endTransaction();
+        }
+    }
+    
+    public List<Order> getUserOrders(int userId) {
+        List<Order> orders = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        
+        Cursor cursor = db.query(DatabaseContract.OrderEntry.TABLE_NAME,
+                null,
+                DatabaseContract.OrderEntry.COLUMN_USER_ID + "=?",
+                new String[]{String.valueOf(userId)},
+                null, null, 
+                DatabaseContract.OrderEntry.COLUMN_CREATED_AT + " DESC");
+        
+        while (cursor.moveToNext()) {
+            Order order = new Order();
+            order.setId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_ID)));
+            order.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_USER_ID)));
+            order.setTableNumber(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_TABLE_NUMBER)));
+            order.setPaymentMethodName(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_PAYMENT_METHOD_NAME)));
+            order.setPaymentMethodType(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_PAYMENT_METHOD_TYPE)));
+            order.setTotalAmount(cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_TOTAL_AMOUNT)));
+            order.setStatus(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_STATUS)));
+            order.setCreatedAt(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderEntry.COLUMN_CREATED_AT)));
+            
+            // Get order items
+            order.setOrderItems(getOrderItems(order.getId()));
+            
+            orders.add(order);
+        }
+        cursor.close();
+        return orders;
+    }
+    
+    private List<OrderItem> getOrderItems(int orderId) {
+        List<OrderItem> orderItems = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        
+        Cursor cursor = db.query(DatabaseContract.OrderItemEntry.TABLE_NAME,
+                null,
+                DatabaseContract.OrderItemEntry.COLUMN_ORDER_ID + "=?",
+                new String[]{String.valueOf(orderId)},
+                null, null, null);
+        
+        while (cursor.moveToNext()) {
+            OrderItem item = new OrderItem();
+            item.setId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_ID)));
+            item.setOrderId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_ORDER_ID)));
+            item.setMenuId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_MENU_ID)));
+            item.setMenuName(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_MENU_NAME)));
+            item.setMenuImage(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_MENU_IMAGE)));
+            item.setSize(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_SIZE)));
+            item.setQuantity(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_QUANTITY)));
+            item.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_PRICE)));
+            item.setSubtotal(cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseContract.OrderItemEntry.COLUMN_SUBTOTAL)));
+            
+            orderItems.add(item);
+        }
+        cursor.close();
+        return orderItems;
+    }
+    
+    public void updateOrderStatus(int orderId, String status) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        
+        ContentValues values = new ContentValues();
+        values.put(DatabaseContract.OrderEntry.COLUMN_STATUS, status);
+        
+        db.update(DatabaseContract.OrderEntry.TABLE_NAME,
+                values,
+                DatabaseContract.OrderEntry.COLUMN_ID + "=?",
+                new String[]{String.valueOf(orderId)});
+    }
+}
+
+// ============== NOTIFICATION RECEIVER ==============
+
+// NotificationReceiver.java
+package com.coffeshop.app.utils;
+
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+
+import androidx.core.app.NotificationCompat;
+
+import com.coffeshop.app.R;
+
+public class NotificationReceiver extends BroadcastReceiver {
+    
+    private static final String CHANNEL_ID = "ORDER_NOTIFICATIONS";
+    private static final int NOTIFICATION_ID = 1001;
+    
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        String action = intent.getAction();
+        
+        if (Constants.ACTION_ORDER_CREATED.equals(action)) {
+            showNotification(context, "Pesanan Berhasil", "Pesanan Anda sedang diproses");
+            
+            // Schedule order completion after 30 seconds
+            int orderId = intent.getIntExtra("order_id", -1);
+            if (orderId != -1) {
+                scheduleOrderCompletion(context, orderId);
+            }
+            
+        } else if (Constants.ACTION_ORDER_COMPLETED.equals(action)) {
+            showNotification(context, "Pesanan Selesai", "Pesanan Anda sudah siap!");
+        }
+    }
+    
+    private void showNotification(Context context, String title, String message) {
+        NotificationManager notificationManager = 
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        
+        // Create notification channel for Android O and above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Order Notifications",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+            notificationManager.createNotificationChannel(channel);
+        }
+        
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_coffee)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true);
+        
+        notificationManager.notify(NOTIFICATION_ID, builder.build());
+    }
+    
+    private void scheduleOrderCompletion(Context context, int orderId) {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(() -> {
+            // Update order status to complete
+            AppRepository repository = new AppRepository(context);
+            repository.updateOrderStatus(orderId, Constants.ORDER_STATUS_COMPLETE);
+            
+            // Send completion notification
+            Intent intent = new Intent(Constants.ACTION_ORDER_COMPLETED);
+            intent.putExtra("order_id", orderId);
+            context.sendBroadcast(intent);
+            
+        }, 30000); // 30 seconds delay
+    }
+}
+
+// ============== VIEW MODELS ==============
+
+// AuthViewModel.java
+package com.coffeshop.app.viewmodels;
+
+import android.app.Application;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.MutableLiveData;
+
+import com.coffeshop.app.models.User;
+import com.coffeshop.app.utils.AppRepository;
+import com.coffeshop.app.utils.ValidationUtils;
+
+public class AuthViewModel extends AndroidViewModel {
+    
+    private AppRepository repository;
+    private MutableLiveData<User> userLiveData = new MutableLiveData<>();
+    private MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    private MutableLiveData<Boolean> loadingLiveData = new MutableLiveData<>();
+    
+    public AuthViewModel(@NonNull Application application) {
+        super(application);
+        repository = new AppRepository(application);
+    }
+    
+    public MutableLiveData<User> getUserLiveData() {
+        return userLiveData;
+    }
+    
+    public MutableLiveData<String> getErrorLiveData() {
+        return errorLiveData;
+    }
+    
+    public MutableLiveData<Boolean> getLoadingLiveData() {
+        return loadingLiveData;
+    }
+    
+    public void register(String name, String email, String password) {
+        // Validation
+        if (!ValidationUtils.isValidName(name)) {
+            errorLiveData.setValue("Nama tidak boleh kosong");
+            return;
+        }
+        
+        if (!ValidationUtils.isValidEmail(email)) {
+            errorLiveData.setValue("Format email tidak valid");
+            return;
+        }
+        
+        if (!ValidationUtils.isValidPassword(password)) {
+            errorLiveData.setValue("Password minimal 6 karakter");
+            return;
+        }
+        
+        loadingLiveData.setValue(true);
+        
+        repository.registerUser(name, email, password, new AppRepository.UserCallback() {
+            @Override
+            public void onSuccess(User user) {
+                loadingLiveData.setValue(false);
+                userLiveData.setValue(user);
+            }
+            
+            @Override
+            public void onError(String error) {
+                loadingLiveData.setValue(false);
+                errorLiveData.setValue(error);
+            }
+        });
+    }
+    
+    public void login(String email, String password) {
+        // Validation
+        if (!ValidationUtils.isValidEmail(email)) {
+            errorLiveData.setValue("Format email tidak valid");
+            return;
+        }
+        
+        if (password == null || password.trim().isEmpty()) {
+            errorLiveData.setValue("Password tidak boleh kosong");
+            return;
+        }
+        
+        loadingLiveData.setValue(true);
+        
+        repository.loginUser(email, password, new AppRepository.LoginCallback() {
+            @Override
+            public void onSuccess(User user) {
+                loadingLiveData.setValue(false);
+                userLiveData.setValue(user);
+            }
+            
+            @Override
+            public void onError(String error) {
+                loadingLiveData.setValue(false);
+                errorLiveData.setValue(error);
+            }
+        });
+    }
+}
+
+// MainViewModel.java
+package com.coffeshop.app.viewmodels;
+
+import android.app.Application;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.MutableLiveData;
+
+import com.coffeshop.app.models.CartItem;
+import com.coffeshop.app.models.MenuItem;
+import com.coffeshop.app.models.Order;
+import com.coffeshop.app.models.PaymentMethod;
+import com.coffeshop.app.utils.AppRepository;
+
+import java.util.List;
+
+public class MainViewModel extends AndroidViewModel {
+    
+    private AppRepository repository;
+    private MutableLiveData<List<MenuItem>> menuLiveData = new MutableLiveData<>();
+    private MutableLiveData<List<String>> categoriesLiveData = new MutableLiveData<>();
+    private MutableLiveData<List<CartItem>> cartLiveData = new MutableLiveData<>();
+    private MutableLiveData<List<Order>> ordersLiveData = new MutableLiveData<>();
+    private MutableLiveData<List<PaymentMethod>> paymentMethodsLiveData = new MutableLiveData<>();
+    private MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    private MutableLiveData<Boolean> loadingLiveData = new MutableLiveData<>();
+    private MutableLiveData<Double> cartTotalLiveData = new MutableLiveData<>();
+    
+    public MainViewModel(@NonNull Application application) {
+        super(application);
+        repository = new AppRepository(application);
+    }
+    
+    // Getters for LiveData
+    public MutableLiveData<List<MenuItem>> getMenuLiveData() { return menuLiveData; }
+    public MutableLiveData<List<String>> getCategoriesLiveData() { return categoriesLiveData; }
+    public MutableLiveData<List<CartItem>> getCartLiveData() { return cartLiveData; }
+    public MutableLiveData<List<Order>> getOrdersLiveData() { return ordersLiveData; }
+    public MutableLiveData<List<PaymentMethod>> getPaymentMethodsLiveData() { return paymentMethodsLiveData; }
+    public MutableLiveData<String> getErrorLiveData() { return errorLiveData; }
+    public MutableLiveData<Boolean> getLoadingLiveData() { return loadingLiveData; }
+    public MutableLiveData<Double> getCartTotalLiveData() { return cartTotalLiveData; }
+    
+    public void loadMenus() {
+        loadingLiveData.setValue(true);
+        repository.getMenus(new AppRepository.MenuCallback() {
+            @Override
+            public void onSuccess(List<MenuItem> menus, List<String> categories) {
+                loadingLiveData.setValue(false);
+                menuLiveData.setValue(menus);
+                categoriesLiveData.setValue(categories);
+            }
+            
+            @Override
+            public void onError(String error) {
+                loadingLiveData.setValue(false);
+                errorLiveData.setValue(error);
+            }
+        });
+    }
+    
+    public void loadCartItems(int userId) {
+        List<CartItem> cartItems = repository.getCartItems(userId);
+        cartLiveData.setValue(cartItems);
+        
+        double total = repository.getCartTotal(userId);
+        cartTotalLiveData.setValue(total);
+    }
+    
+    public void loadOrders(int userId) {
+        List<Order> orders = repository.getUserOrders(userId);
+        ordersLiveData.setValue(orders);
+    }
+    
+    public void loadPaymentMethods() {
+        repository.getPaymentMethods(new AppRepository.PaymentCallback() {
+            @Override
+            public void onSuccess(List<PaymentMethod> paymentMethods) {
+                paymentMethodsLiveData.setValue(paymentMethods);
+            }
+            
+            @Override
+            public void onError(String error) {
+                errorLiveData.setValue(error);
+            }
+        });
+    }
+    
+    public void removeFromCart(int cartId, int userId) {
+        repository.removeFromCart(cartId);
+        loadCartItems(userId); // Refresh cart
+    }
+    
+    public void updateCartItem(int cartId, int quantity, double price, int userId) {
+        repository.updateCartItem(cartId, quantity, price);
+        loadCartItems(userId); // Refresh cart
+    }
+}
+
+// DetailViewModel.java
+package com.coffeshop.app.viewmodels;
+
+import android.app.Application;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.MutableLiveData;
+
+import com.coffeshop.app.utils.AppRepository;
+
+public class DetailViewModel extends AndroidViewModel {
+    
+    private AppRepository repository;
+    private MutableLiveData<Boolean> addToCartSuccessLiveData = new MutableLiveData<>();
+    private MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    
+    public DetailViewModel(@NonNull Application application) {
+        super(application);
+        repository = new AppRepository(application);
+    }
+    
+    public MutableLiveData<Boolean> getAddToCartSuccessLiveData() {
+        return addToCartSuccessLiveData;
+    }
+    
+    public MutableLiveData<String> getErrorLiveData() {
+        return errorLiveData;
+    }
+    
+    public void addToCart(int userId, int menuId, String menuName, String menuImage,
+                         String size, int quantity, double price) {
+        try {
+            repository.addToCart(userId, menuId, menuName, menuImage, size, quantity, price);
+            addToCartSuccessLiveData.setValue(true);
+        } catch (Exception e) {
+            errorLiveData.setValue("Gagal menambahkan ke keranjang: " + e.getMessage());
+        }
+    }
+    
+    public void updateCartItem(int cartId, int quantity, double price) {
+        try {
+            repository.updateCartItem(cartId, quantity, price);
+            addToCartSuccessLiveData.setValue(true);
+        } catch (Exception e) {
+            errorLiveData.setValue("Gagal mengupdate keranjang: " + e.getMessage());
+        }
+    }
+}
+
+// ============== ACTIVITIES ==============
+
+// SplashActivity.java
+package com.coffeshop.app.activities;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.coffeshop.app.R;
+import com.coffeshop.app.utils.Constants;
+
+public class SplashActivity extends AppCompatActivity {
+    
+    private static final int SPLASH_DELAY = 3000; // 3 seconds
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_splash);
+        
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            SharedPreferences prefs = getSharedPreferences(Constants.PREF_NAME, MODE_PRIVATE);
+            boolean isLoggedIn = prefs.getBoolean(Constants.KEY_IS_LOGGED_IN, false);
+            
+            Intent intent;
+            if (isLoggedIn) {
+                intent = new Intent(SplashActivity.this, MainActivity.class);
+            } else {
+                intent = new Intent(SplashActivity.this, AuthActivity.class);
+            }
+            
+            startActivity(intent);
+            finish();
+        }, SPLASH_DELAY);
+    }
+}
+
+// AuthActivity.java
+package com.coffeshop.app.activities;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+
+import com.coffeshop.app.R;
+import com.coffeshop.app.models.User;
+import com.coffeshop.app.utils.Constants;
+import com.coffeshop.app.viewmodels.AuthViewModel;
+
+public class AuthActivity extends AppCompatActivity {
+    
+    private AuthViewModel viewModel;
+    
+    // Login Views
+    private EditText etLoginEmail, etLoginPassword;
+    private Button btnLogin;
+    private TextView tvGoToRegister;
+    
+    // Register Views
+    private EditText etRegisterName, etRegisterEmail, etRegisterPassword;
+    private Button btnRegister;
+    private TextView tvGoToLogin;
+    
+    private View loginLayout, registerLayout;
+    private ProgressBar progressBar;
+    
+    private boolean isLoginMode = true;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_auth);
+        
+        initViews();
+        setupViewModel();
+        setupClickListeners();
+    }
+    
+    private void initViews() {
+        // Login views
+        loginLayout = findViewById(R.id.loginLayout);
+        etLoginEmail = findViewById(R.id.etLoginEmail);
+        etLoginPassword = findViewById(R.id.etLoginPassword);
+        btnLogin = findViewById(R.id.btnLogin);
+        tvGoToRegister = findViewById(R.id.tvGoToRegister);
+        
+        // Register views
+        registerLayout = findViewById(R.id.registerLayout);
+        etRegisterName = findViewById(R.id.etRegisterName);
+        etRegisterEmail = findViewById(R.id.etRegisterEmail);
+        etRegisterPassword = findViewById(R.id.etRegisterPassword);
+        btnRegister = findViewById(R.id.btnRegister);
+        tvGoToLogin = findViewById(R.id.tvGoToLogin);
+        
+        progressBar = findViewById(R.id.progressBar);
+        
+        showLoginForm();
+    }
+    
+    private void setupViewModel() {
+        
     
