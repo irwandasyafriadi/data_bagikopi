@@ -1,4 +1,5 @@
-[
+{
+  "payment_methods": [
     {
         "id": 1,
         "name": "Dana",
@@ -47,4 +48,5 @@
         "type": "bank",
         "iconUrl": "https://images.seeklogo.com/logo-png/47/2/bank-rakyat-indonesia-logo-png_seeklogo-474339.png"
     }
-]
+  ]
+}
