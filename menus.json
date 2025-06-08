@@ -204,7 +204,7 @@
         "name": "Pain Au Chocolate Croissant",
         "category": "meals",
         "description": "Croissant dengan isian cokelat premium yang lumer.",
-        "imageUrl": "https://drive.google.com/drive/folders/1740144_bzFYT9BuTDp4l6XK8w7yLCpUv",
+        "imageUrl": "https://github.com/irwandasyafriadi/data_bagikopi/blob/deb735b3f22587200ba65f98da754b5ded5b0758/bagi_karamel_fix.png",
         "sizes": [
             { "size": "regular", "price": 31000 }
         ]
