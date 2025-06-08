@@ -194,7 +194,7 @@
         "name": "Classic Almond Croissant",
         "category": "meals",
         "description": "Croissant tabur almond dengan filling almond paste.",
-        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/croissant-almond.jpg",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/1d1bdf31-adc6-4509-8be5-2335d088102c_Go-Biz_20240823_084856.jpeg?auto=format",
         "sizes": [
             { "size": "regular", "price": 38000 }
         ]
@@ -204,7 +204,7 @@
         "name": "Pain Au Chocolate Croissant",
         "category": "meals",
         "description": "Croissant dengan isian cokelat premium yang lumer.",
-        "imageUrl": "https://github.com/irwandasyafriadi/data_bagikopi/blob/deb735b3f22587200ba65f98da754b5ded5b0758/bagi_karamel_fix.png",
+        "imageUrl": "https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/835c6b76-bc9b-4972-a811-ec13fc64c577_Go-Biz_20240823_084911.jpeg?auto=format",
         "sizes": [
             { "size": "regular", "price": 31000 }
         ]
